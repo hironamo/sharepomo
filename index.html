@@ -14,307 +14,77 @@
             font-family: -apple-system, sans-serif; transition: background-color 0.8s; overflow: hidden;
             touch-action: manipulation;
         }
-
-        /* サイドパネル */
-        #side-panel {
-            width: 280px; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(25px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1); display: flex; flex-direction: column; z-index: 50;
-        }
+        #side-panel { width: 280px; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(25px); border-right: 1px solid rgba(255, 255, 255, 0.1); display: flex; flex-direction: column; z-index: 50; }
         .panel-section { padding: 20px; flex: 1; overflow-y: auto; }
         h3 { font-size: 0.9rem; letter-spacing: 0.1rem; border-bottom: 1px solid var(--accent); padding-bottom: 8px; margin-top: 0; margin-bottom: 15px; }
-        
         .tab-container { display: flex; gap: 4px; background: rgba(255,255,255,0.1); padding: 4px; border-radius: 8px; margin-bottom: 15px; }
-        .tab-btn {
-            flex: 1; border: none; background: none; color: white; padding: 8px 0;
-            font-size: 0.7rem; cursor: pointer; border-radius: 6px; transition: 0.3s; opacity: 0.5;
-        }
+        .tab-btn { flex: 1; border: none; background: none; color: white; padding: 8px 0; font-size: 0.7rem; cursor: pointer; border-radius: 6px; transition: 0.3s; opacity: 0.5; }
         .tab-btn.active { background: var(--accent); color: #000; opacity: 1; font-weight: bold; }
-
         .ranking-item { display: flex; justify-content: space-between; padding: 10px 0; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .pomo-count { color: var(--accent); font-weight: bold; }
-
-        /* メインエリア */
         #main-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; text-align: center; }
         #user-config { position: absolute; top: 20px; left: 20px; z-index: 60; }
         input#user-name { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 12px; border-radius: 8px; outline: none; }
-        
-        /* ✨ セッションドット：当たり判定を大幅に拡大 */
         .session-dots { display: flex; gap: 5px; margin-bottom: 1rem; z-index: 70; }
         .dot-wrapper { padding: 15px; cursor: pointer; transition: 0.2s; -webkit-tap-highlight-color: transparent; }
         .dot-wrapper:active { transform: scale(1.3); }
         .dot { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: 0.4s; pointer-events: none; }
         .dot.active { background: var(--accent); box-shadow: 0 0 15px var(--accent); }
-        
         #timer { font-size: 18vw; font-weight: 800; font-variant-numeric: tabular-nums; margin: 0; line-height: 1; }
         .progress-container { width: 70%; max-width: 500px; margin: 2rem 0; }
         input[type="range"] { width: 100%; -webkit-appearance: none; background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; outline: none; cursor: pointer; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: white; border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        
         .controls { display: flex; gap: 1.5rem; }
         button.main-btn { padding: 1.2rem 2.5rem; font-size: 1.1rem; border-radius: 100px; border: none; cursor: pointer; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); transition: 0.2s; font-weight: bold; }
         #start-btn { background: var(--text); color: #000; min-width: 140px; }
         #long-break-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
         #sync-status { font-size: 0.75rem; margin-top: 10px; color: var(--accent); opacity: 0.8; }
+        #auth-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; z-index: 200; }
+        .auth-box { width: 320px; background: #0b1220; border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 20px; }
+        .auth-box input { width: 100%; margin-bottom: 8px; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: white; }
     </style>
 </head>
 <body>
+    <div id="auth-modal"><div class="auth-box"><h3>ログイン</h3><input id="auth-email" type="email" placeholder="email"><input id="auth-password" type="password" placeholder="password"><button class="main-btn" onclick="loginEmail()">メールでログイン</button><button class="main-btn" onclick="registerEmail()">新規登録</button><button class="main-btn" onclick="loginGoogle()">Googleログイン</button><p id="auth-msg"></p></div></div>
+    <audio id="alarm-sound" src="omedetou (1).mp3" preload="auto"></audio>
+    <div id="side-panel"><div class="panel-section"><h3>🏆 FRIENDS RANKING</h3><div class="tab-container"><button onclick="changeFilter('today')" id="btn-today" class="tab-btn active">今日</button><button onclick="changeFilter('yesterday')" id="btn-yesterday" class="tab-btn">昨日</button><button onclick="changeFilter('weekly')" id="btn-weekly" class="tab-btn">週間</button></div><div id="ranking-list">同期中...</div><div style="margin-top: 30px;"><button id="record-btn" onclick="manualSync()" style="width: 100%; background: var(--accent); color: #000; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1rem;">記録する</button><p id="sync-status">Firebaseと未同期</p></div></div></div>
+    <div id="main-content"><div id="user-config" style="display: flex; align-items: center; gap: 8px;"><input type="text" id="user-name" placeholder="表示名" value="Guest"><button onclick="location.href='history.html'" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; white-space: nowrap;">履歴</button><button onclick="logout()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem;">ログアウト</button></div><div id="status-label" style="letter-spacing: 0.3rem; opacity: 0.7; margin-top: 20px; margin-bottom: 5px; text-transform: uppercase;">READY</div><div class="session-dots"><div class="dot-wrapper" onclick="setSet(1)"><div class="dot"></div></div><div class="dot-wrapper" onclick="setSet(2)"><div class="dot"></div></div><div class="dot-wrapper" onclick="setSet(3)"><div class="dot"></div></div><div class="dot-wrapper" onclick="setSet(4)"><div class="dot"></div></div></div><div id="timer">25:00</div><div class="progress-container"><input type="range" id="seek-bar" value="0"></div><div class="controls"><button class="main-btn" onclick="location.reload()">Reset</button><button class="main-btn" id="start-btn">START</button></div></div>
+    <div id="long-break-modal"><h2 style="font-size: 2.5rem; margin-bottom: 10px;">Long Break</h2><p>4セット完了しました！休憩時間を選んでください。</p><div style="display:flex; gap:15px; margin-top: 30px;"><button class="main-btn" onclick="setLongBreak(15)">15分</button><button class="main-btn" onclick="setLongBreak(30)">30分</button><button class="main-btn" onclick="setLongBreak(60)">60分</button></div></div>
 
-    <audio id="alarm-sound" src="omedetou.mp3" preload="auto"></audio>
-    <div id="side-panel">
-        <div class="panel-section">
-            <h3>🏆 FRIENDS RANKING</h3>
-            <div class="tab-container">
-                <button onclick="changeFilter('today')" id="btn-today" class="tab-btn active">今日</button>
-                <button onclick="changeFilter('yesterday')" id="btn-yesterday" class="tab-btn">昨日</button>
-                <button onclick="changeFilter('weekly')" id="btn-weekly" class="tab-btn">週間</button>
-            </div>
-            <div id="ranking-list">同期中...</div>
-            <div style="margin-top: 30px;">
-                <button id="record-btn" onclick="manualSync()" style="width: 100%; background: var(--accent); color: #000; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1rem;">シートへ記録する</button>
-                <p id="sync-status">スプレッドシートと未同期</p>
-            </div>
-        </div>
-    </div>
-
-    <div id="main-content">
-        <div id="user-config" style="display: flex; align-items: center; gap: 8px;">
-            <input type="text" id="user-name" placeholder="name (カンマ区切りで複数可)" value="Guest">
-            <button onclick="location.href='history.html'" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; white-space: nowrap;">履歴</button>
-        </div>
-
-        <div id="status-label" style="letter-spacing: 0.3rem; opacity: 0.7; margin-top: 20px; margin-bottom: 5px; text-transform: uppercase;">READY</div>
-
-        <div class="session-dots">
-            <div class="dot-wrapper" onclick="setSet(1)"><div class="dot"></div></div>
-            <div class="dot-wrapper" onclick="setSet(2)"><div class="dot"></div></div>
-            <div class="dot-wrapper" onclick="setSet(3)"><div class="dot"></div></div>
-            <div class="dot-wrapper" onclick="setSet(4)"><div class="dot"></div></div>
-        </div>
-
-        <div id="timer">25:00</div>
-        <div class="progress-container"><input type="range" id="seek-bar" value="0"></div>
-        <div class="controls">
-            <button class="main-btn" onclick="location.reload()">Reset</button>
-            <button class="main-btn" id="start-btn">START</button>
-        </div>
-    </div>
-
-    <div id="long-break-modal">
-        <h2 style="font-size: 2.5rem; margin-bottom: 10px;">Long Break</h2>
-        <p>4セット完了しました！休憩時間を選んでください。</p>
-        <div style="display:flex; gap:15px; margin-top: 30px;">
-            <button class="main-btn" onclick="setLongBreak(15)">15分</button>
-            <button class="main-btn" onclick="setLongBreak(30)">30分</button>
-            <button class="main-btn" onclick="setLongBreak(60)">60分</button>
-        </div>
-    </div>
-
-    <script>
-        const GAS_URL = "https://script.google.com/a/macros/dc.tohoku.ac.jp/s/AKfycbwF0_1CpTnfL8StHq8nE_6Oq8r_YgV6v8mouVayLm87i_Abz5Z5OfJTIL9jetfgJ9HV/exec";
-
-        let duration = 25 * 60, timeLeft = 25 * 60, endTime = null, timerId = null, sessions = 1, mode = 'work', currentFilter = 'today';
-        const timerDisplay = document.getElementById('timer'), startBtn = document.getElementById('start-btn'), seekBar = document.getElementById('seek-bar');
-        const dots = document.querySelectorAll('.dot'), userNameInput = document.getElementById('user-name'), syncStatus = document.getElementById('sync-status'), statusLabel = document.getElementById('status-label');
-
-        if(localStorage.getItem('pomo_name')) userNameInput.value = localStorage.getItem('pomo_name');
-        userNameInput.onchange = () => localStorage.setItem('pomo_name', userNameInput.value);
-
-        function updateUI() {
-            const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
-            const timeStr = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-            timerDisplay.textContent = timeStr;
-            seekBar.max = duration; seekBar.value = duration - timeLeft;
-            dots.forEach((dot, i) => dot.classList.toggle('active', i < sessions));
-            const labelText = (statusLabel.textContent === 'READY') ? 'Focus' : statusLabel.textContent;
-            document.title = `[${timeStr}] ${labelText}`;
-        }
-
-        // ✨ セット選択のロジック（当たり判定強化版）
-        function setSet(n) {
-            sessions = n;
-            updateUI();
-        }
-
-        seekBar.oninput = function() {
-            timeLeft = duration - parseInt(this.value);
-            if (timerId) endTime = Date.now() + (timeLeft * 1000);
-            updateUI();
-        };
-
-        function requestNotificationPermission() {
-            if (!("Notification" in window) || Notification.permission !== "default") return;
-            Notification.requestPermission().catch(() => {});
-        }
-
-        function startCountdown() {
-            endTime = Date.now() + (timeLeft * 1000);
-            statusLabel.textContent = mode.toUpperCase();
-            timerId = setInterval(() => {
-                timeLeft = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
-                updateUI();
-                if(timeLeft <= 0) { clearInterval(timerId); timerId = null; handleEnd(); startBtn.textContent = "START"; }
-            }, 200);
-            startBtn.textContent = "PAUSE";
-        }
-
-        function notifyNextTimer() {
-            if (!("Notification" in window) || Notification.permission !== "granted") return;
-            const nextLabel = mode === 'work' ? "集中タイマー" : "休憩タイマー";
-            const n = new Notification("タイマー終了", {
-                body: `通知を押すと次の${nextLabel}を開始します。`,
-                requireInteraction: true
-            });
-            n.onclick = () => {
-                window.focus();
-                if (!timerId) startCountdown();
-                n.close();
-            };
-        }
-
-        startBtn.onclick = () => {
-            requestNotificationPermission();
-            // 【追加】クリック時に音声をアンロック（鳴る準備をする）
-            document.getElementById('alarm-sound').play().then(() => {
-                const a = document.getElementById('alarm-sound');
-                a.pause(); a.currentTime = 0;
-            }).catch(e => {});
-            if (timerId) {
-                clearInterval(timerId); timerId = null;
-                startBtn.textContent = "START";
-            } else {
-                startCountdown();
-            }
-        };
-
-        function changeFilter(filter) {
-            currentFilter = filter;
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('btn-' + filter).classList.add('active');
-            fetchRanking();
-        }
-
-       function manualSync() {
-    if(!GAS_URL || GAS_URL.includes("YOUR")) return;
-
-    // 半角/全角カンマの両方に対応して分割
-    const names = userNameInput.value
-        .split(/[、,]/)
-        .map(n => n.trim())
-        .filter(n => n !== "");
-    if (names.length === 0) return;
-
-    syncStatus.textContent = `${names.length}人分を順番に送信中...`;
-
-    // 同時送信で欠損しないよう、1人ずつ順番に送信する
-    names.forEach((name, index) => {
-        setTimeout(() => {
-            const iframe = document.createElement('iframe');
-            const iframeName = `tmp_frame_${Date.now()}_${index}`;
-            iframe.name = iframeName;
-            iframe.style.display = "none";
-            document.body.appendChild(iframe);
-
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = GAS_URL;
-            form.target = iframeName;
-
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'name';
-            input.value = name;
-
-            form.appendChild(input);
-            document.body.appendChild(form);
-            form.submit();
-
-            syncStatus.textContent = `${index + 1}/${names.length}人分を送信済み...`;
-
-            setTimeout(() => {
-                if(document.body.contains(form)) document.body.removeChild(form);
-                if(document.body.contains(iframe)) document.body.removeChild(iframe);
-            }, 5000);
-        }, index * 700);
-    });
-
-    const doneWait = (names.length * 700) + 1500;
-    setTimeout(() => {
-        syncStatus.textContent = "全員分の送信完了！";
-        fetchRanking();
-    }, doneWait);
-}
-
-        function fetchRanking() {
-            if(!GAS_URL || GAS_URL.includes("YOUR")) return;
-            const oldScript = document.getElementById('gas-jsonp'); if (oldScript) oldScript.remove();
-            window.handlePomoData = function(data) {
-                const now = new Date(), todayStr = now.toDateString();
-                const yesterday = new Date(); yesterday.setDate(now.getDate() - 1);
-                const yesterdayStr = yesterday.toDateString(), sevenDaysAgo = new Date(); sevenDaysAgo.setDate(now.getDate() - 7);
-                const counts = {};
-                data.forEach((row, index) => {
-                    if (index === 0 || !row[0]) return;
-                    const rDate = new Date(row[0]), rStr = rDate.toDateString(), name = row[1] || "Unknown";
-                    if ((currentFilter==='today' && rStr===todayStr) || (currentFilter==='yesterday' && rStr===yesterdayStr) || (currentFilter==='weekly' && rDate>sevenDaysAgo)) counts[name] = (counts[name]||0) + 1;
-                });
-                const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
-                document.getElementById('ranking-list').innerHTML = sorted.length === 0 ? `<div style='font-size:0.8rem; opacity:0.5;'>${currentFilter}の記録なし</div>` : sorted.map(([n, c]) => `<div class="ranking-item"><span>${n}</span><span class="pomo-count">${c} ポモ</span></div>`).join('');
-            };
-            document.body.appendChild(Object.assign(document.createElement('script'), {id:'gas-jsonp', src: GAS_URL + "?callback=handlePomoData&t=" + Date.now()}));
-        }
-
-        function handleEnd() {
-            playAlarm();
-            let shouldNotify = true;
-            if (mode === 'work') {
-                manualSync();
-                if (sessions >= 4) {
-                    document.getElementById('long-break-modal').style.display = 'flex';
-                    shouldNotify = false;
-                }
-                else initBreak(5);
-            } else initWork();
-            if (shouldNotify) notifyNextTimer();
-        }
-
-        function initWork() { 
-            mode='work'; duration=25*60; timeLeft=duration; 
-            if(statusLabel.textContent !== 'READY') sessions = (sessions >= 4) ? 1 : sessions + 1;
-            document.body.style.backgroundColor='var(--bg-work)'; 
-            statusLabel.textContent = "FOCUS"; updateUI(); 
-        }
-
-        function initBreak(m) { 
-            mode='break'; duration=m*60; timeLeft=duration; 
-            document.body.style.backgroundColor=(m>=15)?'var(--bg-long)':'var(--bg-break)'; 
-            statusLabel.textContent = "BREAK"; updateUI(); 
-        }
-
-        function setLongBreak(m) { document.getElementById('long-break-modal').style.display='none'; sessions = 4; initBreak(m); }
-
-        function playAlarm() { 
-    const alarmSound = document.getElementById('alarm-sound');
-    if (alarmSound) {
-        alarmSound.currentTime = 0;
-        alarmSound.play().catch(e => {
-            // エラー時のバックアップ（元の電子音）
-            const ctx=new (window.AudioContext || window.webkitAudioContext)(), osc=ctx.createOscillator(), g=ctx.createGain();
-            osc.connect(g); g.connect(ctx.destination);
-            osc.frequency.value=880; g.gain.linearRampToValueAtTime(0.5, ctx.currentTime+0.1);
-            g.gain.linearRampToValueAtTime(0, ctx.currentTime+1);
-            osc.start(); osc.stop(ctx.currentTime+1);
-        });
-    }
-}
-
-        fetchRanking(); updateUI();
-    </script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyCZh4ME9QimEx62f7SLc4F3lyorTzml_hY",authDomain:"sharetimer-fd215.firebaseapp.com",projectId:"sharetimer-fd215",storageBucket:"sharetimer-fd215.firebasestorage.app",messagingSenderId:"862201995112",appId:"1:862201995112:web:2b1b8d6a5cb74eb5d440dd",measurementId:"G-2DKH6Y8R4C"};
+firebase.initializeApp(firebaseConfig); const auth=firebase.auth(); const db=firebase.firestore();
+let currentUser=null;
+let duration = 25 * 60, timeLeft = 25 * 60, endTime = null, timerId = null, sessions = 1, mode = 'work', currentFilter = 'today', workStartedAt = null;
+const timerDisplay = document.getElementById('timer'), startBtn = document.getElementById('start-btn'), seekBar = document.getElementById('seek-bar');
+const dots = document.querySelectorAll('.dot'), userNameInput = document.getElementById('user-name'), syncStatus = document.getElementById('sync-status'), statusLabel = document.getElementById('status-label');
+function setAuthMessage(m){document.getElementById('auth-msg').textContent=m||'';}
+async function registerEmail(){try{const e=document.getElementById('auth-email').value,p=document.getElementById('auth-password').value;await auth.createUserWithEmailAndPassword(e,p);}catch(err){setAuthMessage(err.message);}}
+async function loginEmail(){try{const e=document.getElementById('auth-email').value,p=document.getElementById('auth-password').value;await auth.signInWithEmailAndPassword(e,p);}catch(err){setAuthMessage(err.message);}}
+async function loginGoogle(){try{await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());}catch(err){setAuthMessage(err.message);}}
+function logout(){auth.signOut();}
+auth.onAuthStateChanged(async user=>{currentUser=user;document.getElementById('auth-modal').style.display=user?'none':'flex';if(!user) return;const ref=db.collection('users').doc(user.uid);const snap=await ref.get(); if(!snap.exists){await ref.set({displayName:user.displayName||'User',photoURL:user.photoURL||'',createdAt:firebase.firestore.FieldValue.serverTimestamp()});}
+const profile=(await ref.get()).data(); userNameInput.value=profile.displayName||'User'; fetchRanking();});
+userNameInput.onchange = async () => { if(!currentUser) return; await db.collection('users').doc(currentUser.uid).set({displayName:userNameInput.value,photoURL:currentUser.photoURL||''},{merge:true}); };
+function updateUI(){const m=Math.floor(timeLeft/60),s=timeLeft%60,timeStr=`${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;timerDisplay.textContent=timeStr;seekBar.max=duration;seekBar.value=duration-timeLeft;dots.forEach((dot,i)=>dot.classList.toggle('active',i<sessions));const labelText=(statusLabel.textContent==='READY')?'Focus':statusLabel.textContent;document.title=`[${timeStr}] ${labelText}`;}
+function setSet(n){sessions=n;updateUI();}
+seekBar.oninput=function(){timeLeft=duration-parseInt(this.value);if(timerId) endTime=Date.now()+(timeLeft*1000);updateUI();};
+function requestNotificationPermission(){if(!('Notification' in window)||Notification.permission!=='default') return;Notification.requestPermission().catch(()=>{});}
+function startCountdown(){if(mode==='work'&&!workStartedAt)workStartedAt=new Date();endTime=Date.now()+(timeLeft*1000);statusLabel.textContent=mode.toUpperCase();timerId=setInterval(()=>{timeLeft=Math.max(0,Math.ceil((endTime-Date.now())/1000));updateUI();if(timeLeft<=0){clearInterval(timerId);timerId=null;handleEnd();startBtn.textContent='START';}},200);startBtn.textContent='PAUSE';}
+function notifyNextTimer(){if(!('Notification' in window)||Notification.permission!=='granted') return;const nextLabel=mode==='work'?'集中タイマー':'休憩タイマー';const n=new Notification('タイマー終了',{body:`通知を押すと次の${nextLabel}を開始します。`,requireInteraction:true});n.onclick=()=>{window.focus();if(!timerId)startCountdown();n.close();};}
+startBtn.onclick=()=>{requestNotificationPermission();document.getElementById('alarm-sound').play().then(()=>{const a=document.getElementById('alarm-sound');a.pause();a.currentTime=0;}).catch(()=>{});if(timerId){clearInterval(timerId);timerId=null;startBtn.textContent='START';}else{startCountdown();}};
+function changeFilter(filter){currentFilter=filter;document.querySelectorAll('.tab-btn').forEach(btn=>btn.classList.remove('active'));document.getElementById('btn-'+filter).classList.add('active');fetchRanking();}
+async function manualSync(){if(!currentUser||!workStartedAt) return;const endAt=new Date();await db.collection('pomodoros').add({userId:currentUser.uid,name:userNameInput.value,startAt:firebase.firestore.Timestamp.fromDate(workStartedAt),endAt:firebase.firestore.Timestamp.fromDate(endAt),durationSec:1500,createdAt:firebase.firestore.FieldValue.serverTimestamp()});syncStatus.textContent='記録完了';workStartedAt=null;fetchRanking();}
+async function fetchRanking(){const snap=await db.collection('pomodoros').orderBy('startAt','desc').limit(500).get();const now=new Date(),todayStr=now.toDateString();const yesterday=new Date();yesterday.setDate(now.getDate()-1);const yesterdayStr=yesterday.toDateString(),sevenDaysAgo=new Date();sevenDaysAgo.setDate(now.getDate()-7);const counts={};snap.forEach(doc=>{const d=doc.data();if(!d.startAt)return;const rDate=d.startAt.toDate(),rStr=rDate.toDateString(),name=d.name||'Unknown';if((currentFilter==='today'&&rStr===todayStr)||(currentFilter==='yesterday'&&rStr===yesterdayStr)||(currentFilter==='weekly'&&rDate>sevenDaysAgo))counts[name]=(counts[name]||0)+1;});const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);document.getElementById('ranking-list').innerHTML=sorted.length===0?`<div style='font-size:0.8rem; opacity:0.5;'>${currentFilter}の記録なし</div>`:sorted.map(([n,c])=>`<div class="ranking-item"><span>${n}</span><span class="pomo-count">${c} ポモ</span></div>`).join('');}
+function handleEnd(){playAlarm();let shouldNotify=true;if(mode==='work'){manualSync();if(sessions>=4){document.getElementById('long-break-modal').style.display='flex';shouldNotify=false;}else initBreak(5);}else initWork();if(shouldNotify)notifyNextTimer();}
+function initWork(){mode='work';duration=25*60;timeLeft=duration;if(statusLabel.textContent!=='READY') sessions=(sessions>=4)?1:sessions+1;document.body.style.backgroundColor='var(--bg-work)';statusLabel.textContent='FOCUS';updateUI();}
+function initBreak(m){mode='break';duration=m*60;timeLeft=duration;document.body.style.backgroundColor=(m>=15)?'var(--bg-long)':'var(--bg-break)';statusLabel.textContent='BREAK';updateUI();}
+function setLongBreak(m){document.getElementById('long-break-modal').style.display='none';sessions=4;initBreak(m);}
+function playAlarm(){const alarmSound=document.getElementById('alarm-sound');if(alarmSound){alarmSound.currentTime=0;alarmSound.play().catch(()=>{const ctx=new(window.AudioContext||window.webkitAudioContext)(),osc=ctx.createOscillator(),g=ctx.createGain();osc.connect(g);g.connect(ctx.destination);osc.frequency.value=880;g.gain.linearRampToValueAtTime(0.5,ctx.currentTime+0.1);g.gain.linearRampToValueAtTime(0,ctx.currentTime+1);osc.start();osc.stop(ctx.currentTime+1);});}}
+updateUI();
+</script>
 </body>
-
 </html>
-
-
-
-
-
-
