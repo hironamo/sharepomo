@@ -8,7 +8,6 @@
         body { background: #0f172a; color: white; font-family: sans-serif; padding: 20px; }
         #calendar { max-width: 900px; margin: 0 auto; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; }
         .fc-daygrid-day-number { color: #38bdf8; }
-        .pomo-event { background: #38bdf8 !important; border: none !important; color: #000 !important; font-weight: bold; text-align: center; }
         .back-link { display: inline-block; margin-bottom: 20px; color: #38bdf8; text-decoration: none; }
     </style>
 </head>
@@ -16,46 +15,14 @@
     <a href="index.html" class="back-link">← タイマーに戻る</a>
     <h2 id="user-title">Loading History...</h2>
     <div id="calendar"></div>
-
-   <script>
-    const GAS_URL = "https://script.google.com/a/macros/dc.tohoku.ac.jp/s/AKfycbwF0_1CpTnfL8StHq8nE_6Oq8r_YgV6v8mouVayLm87i_Abz5Z5OfJTIL9jetfgJ9HV/exec"; // ★必ず自分のものに書き換え
-    const myName = localStorage.getItem('pomo_name') || "Guest";
-    document.getElementById('user-title').textContent = `${myName} の作業履歴`;
-
-    function loadCalendar() {
-        // GASへ履歴をリクエスト
-        const script = document.createElement('script');
-        // ランダムなtを付けてキャッシュを回避し、action=getUserHistoryを送る
-        script.src = `${GAS_URL}?action=getUserHistory&name=${encodeURIComponent(myName)}&callback=drawCalendar&t=${Date.now()}`;
-        document.body.appendChild(script);
-    }
-
-    // GASからのレスポンスを受け取ってから実行される関数
-    window.drawCalendar = function(historyData) {
-        const calendarEl = document.getElementById('calendar');
-        const events = Object.keys(historyData).map(date => ({
-            title: `${historyData[date]} ポモ`,
-            start: date,
-            allDay: true
-        }));
-
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'ja',
-            events: events,
-            eventDidMount: function(info) {
-                // 背景色などの微調整
-                info.el.style.backgroundColor = '#38bdf8';
-                info.el.style.color = '#000';
-                info.el.style.border = 'none';
-                info.el.style.borderRadius = '4px';
-            }
-        });
-        calendar.render();
-    };
-
-    // ページ読み込み時に開始
-    window.onload = loadCalendar;
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyCZh4ME9QimEx62f7SLc4F3lyorTzml_hY",authDomain:"sharetimer-fd215.firebaseapp.com",projectId:"sharetimer-fd215",storageBucket:"sharetimer-fd215.firebasestorage.app",messagingSenderId:"862201995112",appId:"1:862201995112:web:2b1b8d6a5cb74eb5d440dd",measurementId:"G-2DKH6Y8R4C"};
+firebase.initializeApp(firebaseConfig); const auth=firebase.auth(); const db=firebase.firestore();
+auth.onAuthStateChanged(async user=>{if(!user){location.href='index.html'; return;}const title=document.getElementById('user-title');title.textContent=`${user.displayName || 'あなた'} の作業履歴`;const snap=await db.collection('pomodoros').where('userId','==',user.uid).get();const byDate={};snap.forEach(doc=>{const d=doc.data();if(!d.startAt) return;const date=d.startAt.toDate().toISOString().slice(0,10);byDate[date]=(byDate[date]||0)+1;});drawCalendar(byDate);});
+function drawCalendar(historyData){const calendarEl=document.getElementById('calendar');const events=Object.keys(historyData).map(date=>({title:`${historyData[date]} ポモ`,start:date,allDay:true}));const calendar=new FullCalendar.Calendar(calendarEl,{initialView:'dayGridMonth',locale:'ja',events});calendar.render();}
 </script>
 </body>
 </html>
