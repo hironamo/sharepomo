@@ -379,9 +379,10 @@
             }
 
             if (mode === 'work') {
+                // ★修正：4セット待たずに、25分の作業が終わる「毎回」記録を保存する
+                await savePomoRecord();
+
                 if (sessions >= 4) {
-                    // 4セット(1ポモ)完了でFirestoreに記録
-                    await savePomoRecord();
                     document.getElementById('long-break-modal').style.display = 'flex';
                 } else {
                     initBreak(5);
