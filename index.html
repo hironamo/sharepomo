@@ -374,12 +374,28 @@
 
         async function handleEnd() {
             playAlarm();
+            
+            // 1. 通知を作成し、変数（noti）に入れておく
             if (Notification.permission === 'granted') {
-                new Notification("ポモドーロ完了！", { body: mode === 'work' ? "お疲れ様です！" : "集中を再開しましょう" });
+                const noti = new Notification(
+                    mode === 'work' ? "作業完了！☕️" : "休憩終了！💻", 
+                    { body: "通知をクリックして次を開始" }
+                );
+
+                // 2. 通知がクリックされた時の処理を追加
+                noti.onclick = function() {
+                    window.focus(); // ブラウザを最前面に持ってくる
+                    this.close();   // 通知を閉じる
+                    
+                    // 長休憩の選択画面が出ている時以外は、自動でタイマーを開始する
+                    if (document.getElementById('long-break-modal').style.display !== 'flex') {
+                        toggleTimer(); 
+                    }
+                };
             }
 
+            // 今までの状態切り替えと記録の処理
             if (mode === 'work') {
-                // ★修正：4セット待たずに、25分の作業が終わる「毎回」記録を保存する
                 await savePomoRecord();
 
                 if (sessions >= 4) {
@@ -391,7 +407,6 @@
                 initWork();
             }
         }
-
         async function savePomoRecord() {
             if(!currentUser) return;
             try {
