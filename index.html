@@ -70,18 +70,25 @@
         #status-label { letter-spacing: 0.3rem; opacity: 0.8; margin-bottom: 20px; text-transform: uppercase; font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-weight: bold;}
        .session-dots { 
             display: flex; 
-            gap: 0; 
+            gap: 15px; 
             margin-bottom: 1rem; 
-            align-items: center; 
         }
         .dot-wrapper { 
-            /* 上10px、左右15px、下30px と、下方向に判定を大きく広げる */
-            padding: 10px 15px 30px 15px; 
-            /* 判定を広げた分、見た目の位置や下のタイマーがズレないように相殺する */
-            margin-top: -10px;
-            margin-bottom: -30px;
+            position: relative; /* 当たり判定の基準にする */
+            padding: 5px;       /* 見た目の余白は初期状態に戻す */
             cursor: pointer; 
             -webkit-tap-highlight-color: transparent; 
+        }
+        /* 見えない巨大なクリックエリア（当たり判定）を上に重ねて生成 */
+        .dot-wrapper::after {
+            content: "";
+            position: absolute;
+            /* ドットからの広がり（数値を大きくすればいくらでも判定が広がります） */
+            top: -25px;    /* 上へ25px広げる */
+            bottom: -35px; /* 下へ35px広げる（下を少し長めに） */
+            left: -20px;   /* 左へ20px広げる */
+            right: -20px;  /* 右へ20px広げる */
+            z-index: 10;   /* 一番手前に持ってくる */
         }
         .dot { width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: 0.3s; pointer-events: none; }
         .dot.active { background: var(--accent); box-shadow: 0 0 12px var(--accent); }
