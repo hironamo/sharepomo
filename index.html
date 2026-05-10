@@ -3,147 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Focus Connect Pro - Party</title>
+    <title>Focus Connect</title>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     <style>
+        /* --- 全体のテーマとリセット --- */
         :root {
             --bg-work: #0f172a; --bg-break: #064e3b; --bg-long: #1e3a8a;
             --accent: #38bdf8; --text: #f8fafc; --sidebar-bg: rgba(0,0,0,0.85);
         }
+        * { box-sizing: border-box; }
         body {
             margin: 0; display: flex; height: 100vh; background-color: var(--bg-work); 
             background-size: cover; background-position: center; color: var(--text);
-            font-family: -apple-system, sans-serif; transition: 0.8s; overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            transition: background 0.8s ease; overflow: hidden;
         }
-        /* サイドバー */
+
+        /* --- サイドバー --- */
         #sidebar {
-            width: 300px; height: 100%; background: var(--sidebar-bg); backdrop-filter: blur(20px);
+            width: 320px; height: 100%; background: var(--sidebar-bg); backdrop-filter: blur(20px);
             border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column;
-            transition: transform 0.4s ease; z-index: 1000; position: fixed; transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; position: fixed; 
+            transform: translateX(-100%); overflow-y: auto; padding: 60px 20px 20px;
         }
         #sidebar.open { transform: translateX(0); }
         .sidebar-toggle {
-            position: fixed; top: 20px; left: 20px; z-index: 1001; 
-            background: rgba(255,255,255,0.1); border: none; color: white;
-            padding: 10px; border-radius: 8px; cursor: pointer;
+            position: fixed; top: 20px; left: 20px; z-index: 1001; background: rgba(0,0,0,0.5); 
+            border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px 15px; 
+            border-radius: 8px; cursor: pointer; font-size: 1.2rem; backdrop-filter: blur(5px);
         }
 
-        /* メインエリア */
-        #main-content { flex: 1; display: flex; flex-direction: column; position: relative; margin-left: 0; transition: 0.4s; }
-        .content-active-sidebar #main-content { margin-left: 300px; }
+        /* --- メインエリアとビュー --- */
+        #main-content { 
+            flex: 1; display: flex; flex-direction: column; position: relative; 
+            transition: margin-left 0.4s; width: 100%;
+        }
+        @media (min-width: 768px) { .content-active-sidebar #main-content { margin-left: 320px; } }
 
-        .view { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
-        .view.active { display: flex; }
+        .view { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: absolute; top:0; left:0; }
+        .view.active { display: flex; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* パーティUI */
-        .party-card { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; margin: 10px; }
-        #room-id-display { font-weight: bold; color: var(--accent); font-size: 1.5rem; }
-
-        /* タイマーUI */
-        #timer { font-size: clamp(4rem, 18vw, 12rem); font-weight: 800; line-height: 1; margin: 20px 0; font-variant-numeric: tabular-nums; }
-        .session-dots { display: flex; gap: 10px; }
-        .dot { width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.2); }
+        /* --- UIコンポーネント --- */
+        .glass-panel { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 500px; }
+        .main-btn { padding: 1rem 2rem; font-size: 1.1rem; border-radius: 50px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; color: black; background: white; text-align: center; }
+        .main-btn:active { transform: scale(0.95); }
+        .input-field { width: 100%; padding: 12px; margin: 8px 0 15px; border-radius: 8px; border: none; background: rgba(255,255,255,0.9); font-size: 1rem; }
+        
+        /* タイマー部分 */
+        #timer-display { font-size: clamp(5rem, 20vw, 12rem); font-weight: 800; line-height: 1; margin: 10px 0; font-variant-numeric: tabular-nums; text-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        #status-label { font-size: 1.5rem; font-weight: bold; letter-spacing: 0.3em; opacity: 0.8; text-transform: uppercase; }
+        
+        /* セッションドット (クリック可能) */
+        .session-dots { display: flex; gap: 15px; margin-bottom: 20px; }
+        .dot { width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; transition: 0.3s; }
         .dot.active { background: var(--accent); box-shadow: 0 0 15px var(--accent); }
         
-        .progress-container { width: 70%; max-width: 500px; margin: 20px 0; }
-        input[type="range"] { width: 100%; height: 8px; border-radius: 4px; cursor: pointer; }
+        /* シークバー */
+        .progress-container { width: 80%; max-width: 600px; margin: 30px 0; display: flex; align-items: center; gap: 10px; }
+        input[type="range"] { flex: 1; height: 8px; border-radius: 4px; cursor: pointer; accent-color: var(--accent); }
         
+        /* コントロール */
         .controls { display: flex; gap: 20px; }
-        .main-btn { padding: 1.2rem 2.5rem; font-size: 1.2rem; border-radius: 50px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        #start-btn { background: var(--text); color: black; min-width: 160px; }
-        
-        /* 履歴・設定 */
-        .scroll-area { width: 100%; max-width: 600px; padding: 40px; overflow-y: auto; }
-        #calendar { background: white; color: black; padding: 10px; border-radius: 10px; }
+        #start-btn { min-width: 160px; background: var(--accent); font-size: 1.3rem; }
 
-        /* ログイン */
-        .auth-box { text-align: center; background: rgba(0,0,0,0.6); padding: 40px; border-radius: 20px; }
-        .auth-input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; }
+        /* パーティUI */
+        .party-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        #room-id-display { font-size: 2rem; font-weight: bold; color: var(--accent); letter-spacing: 5px; }
+
+        /* ランキングタブ */
+        .ranking-tabs { display: flex; gap: 5px; margin-bottom: 10px; }
+        .r-tab { flex:1; background: rgba(255,255,255,0.1); border:none; color:white; padding:5px; cursor:pointer; font-size:0.8rem; border-radius:5px;}
+        .r-tab.active { background: var(--accent); color:black; font-weight:bold; }
+        .ranking-list { font-size: 0.9rem; max-height: 200px; overflow-y: auto; }
+        .rank-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+        /* モーダル (長休憩選択) */
+        #long-break-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; }
+        .modal-content { background: var(--bg-work); padding: 40px; border-radius: 20px; text-align: center; border: 1px solid var(--accent); }
+        .modal-btn { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 15px 30px; margin: 10px; font-size: 1.2rem; border-radius: 10px; cursor: pointer; }
+        .modal-btn:hover { background: var(--accent); color: black; }
+
+        /* カレンダー */
+        #calendar-container { width: 90%; max-width: 800px; height: 80%; background: white; color: black; padding: 20px; border-radius: 15px; overflow: auto; }
     </style>
 </head>
 <body class="content-active-sidebar">
 
-    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰ メニュー</button>
 
     <div id="sidebar" class="open">
-        <div style="padding: 60px 20px 20px;">
-            <div class="user-info" style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
-                <img id="side-user-icon" style="width:40px; height:40px; border-radius:50%;" src="https://via.placeholder.com/40">
-                <span id="side-user-name">Guest</span>
+        <div style="display:flex; align-items:center; gap:15px; margin-bottom:25px;">
+            <img id="side-user-icon" style="width:50px; height:50px; border-radius:50%; object-fit:cover;" src="https://via.placeholder.com/50">
+            <div>
+                <div id="side-user-name" style="font-weight:bold; font-size:1.1rem;">Guest</div>
+                <div id="side-user-pomo" style="font-size:0.8rem; opacity:0.7;">Total: 0 ポモ</div>
             </div>
+        </div>
 
-            <div class="party-card">
-                <h3>👥 PARTY MODE</h3>
-                <div id="party-join-ui">
-                    <input type="number" id="room-input" placeholder="3桁の部屋番号" class="auth-input" style="font-size: 1.2rem; text-align:center;">
-                    <button onclick="joinRoom()" style="width:100%; padding:10px; background:var(--accent); border:none; border-radius:8px; font-weight:bold;">参加 / 作成</button>
-                </div>
-                <div id="party-info-ui" style="display:none; text-align:center;">
-                    <p>ROOM: <span id="room-id-display">---</span></p>
-                    <p id="party-status" style="font-size:0.8rem; opacity:0.7;">待機中...</p>
-                    <button onclick="leaveRoom()" style="color:red; background:none; border:none; cursor:pointer;">部屋を抜ける</button>
-                </div>
+        <div class="party-card">
+            <h3 style="margin-top:0; font-size:1rem;">👥 パーティモード (同時タイマー)</h3>
+            <div id="party-join-ui">
+                <input type="number" id="room-input" placeholder="3桁の合言葉 (例: 123)" class="input-field" style="text-align:center; font-size:1.2rem;">
+                <button onclick="joinRoom()" class="main-btn" style="width:100%; padding:10px; background:var(--accent);">入室 / 作成</button>
             </div>
-
-            <nav style="display:grid; gap:10px; margin-top:20px;">
-                <button onclick="switchView('main')" class="main-btn" style="font-size:0.9rem; padding:10px;">Timer</button>
-                <button onclick="switchView('history')" class="main-btn" style="font-size:0.9rem; padding:10px;">History</button>
-                <button onclick="switchView('settings')" class="main-btn" style="font-size:0.9rem; padding:10px;">Settings</button>
-                <button onclick="logout()" style="color:gray; background:none; border:none; margin-top:10px;">Logout</button>
-            </nav>
-
-            <div id="ranking-section" style="margin-top:30px;">
-                <h4 style="border-bottom:1px solid var(--accent);">Ranking</h4>
-                <div id="ranking-list" style="font-size:0.85rem;"></div>
+            <div id="party-info-ui" style="display:none; text-align:center;">
+                <p style="margin:5px 0; font-size:0.9rem;">現在のルーム</p>
+                <div id="room-id-display">---</div>
+                <p id="party-status" style="font-size:0.85rem; opacity:0.8; margin-bottom:15px;">メンバーと同期中...</p>
+                <button onclick="leaveRoom()" style="background:rgba(255,0,0,0.2); color:#ff6b6b; border:1px solid #ff6b6b; padding:8px 15px; border-radius:20px; cursor:pointer;">退出する</button>
             </div>
+        </div>
+
+        <nav style="display:flex; flex-direction:column; gap:10px; margin-bottom: 30px;">
+            <button onclick="switchView('main')" class="main-btn" style="padding:12px; font-size:1rem;">⏱️ タイマー</button>
+            <button onclick="switchView('history')" class="main-btn" style="padding:12px; font-size:1rem;">📅 履歴カレンダー</button>
+            <button onclick="switchView('settings')" class="main-btn" style="padding:12px; font-size:1rem;">⚙️ 設定</button>
+            <button onclick="logout()" style="background:none; color:gray; padding:10px; margin-top:10px; border:none; cursor:pointer;">ログアウト</button>
+        </nav>
+
+        <div class="party-card" style="flex:1;">
+            <h3 style="margin-top:0; font-size:1rem;">👑 ランキング</h3>
+            <div class="ranking-tabs">
+                <button class="r-tab active" onclick="showRanking('today')">今日</button>
+                <button class="r-tab" onclick="showRanking('yesterday')">昨日</button>
+                <button class="r-tab" onclick="showRanking('week')">週間</button>
+            </div>
+            <div id="ranking-list" class="ranking-list">読み込み中...</div>
         </div>
     </div>
 
     <div id="main-content">
+        
         <div id="view-login" class="view active">
-            <div class="auth-box">
-                <h1>Focus Connect</h1>
-                <input type="email" id="login-email" class="auth-input" placeholder="Email">
-                <input type="password" id="login-pass" class="auth-input" placeholder="Password">
-                <button onclick="loginEmail()" class="main-btn" style="width:100%; background:var(--accent); color:black;">Login / Sign Up</button>
-                <p>or</p>
-                <button onclick="loginGoogle()" class="main-btn" style="width:100%; background:white; color:black;">Google Login</button>
+            <div class="glass-panel" style="text-align:center;">
+                <h1 style="margin-top:0;">Focus Connect Pro</h1>
+                <p>集中力を共有しよう</p>
+                <input type="email" id="login-email" class="input-field" placeholder="メールアドレス">
+                <input type="password" id="login-pass" class="input-field" placeholder="パスワード (6文字以上)">
+                <button onclick="loginEmail()" class="main-btn" style="width:100%; background:var(--accent); margin-bottom:15px;">登録 / ログイン</button>
+                <p style="font-size:0.9rem; opacity:0.8;">または</p>
+                <button onclick="loginGoogle()" class="main-btn" style="width:100%; display:flex; align-items:center; justify-content:center; gap:10px;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="20"> Googleでログイン
+                </button>
             </div>
         </div>
 
         <div id="view-main" class="view">
-            <div id="status-label" style="opacity:0.6; letter-spacing:0.3rem;">READY</div>
+            <div id="status-label">WORK</div>
             <div class="session-dots">
-                <div class="dot" id="dot1"></div><div class="dot" id="dot2"></div><div class="dot" id="dot3"></div><div class="dot" id="dot4"></div>
+                <div class="dot active" id="dot1" onclick="setSession(1)"></div>
+                <div class="dot" id="dot2" onclick="setSession(2)"></div>
+                <div class="dot" id="dot3" onclick="setSession(3)"></div>
+                <div class="dot" id="dot4" onclick="setSession(4)"></div>
             </div>
-            <div id="timer">25:00</div>
-            <div class="progress-container"><input type="range" id="seek-bar" value="0"></div>
+            <div id="timer-display">25:00</div>
+            
+            <div class="progress-container">
+                <span style="font-size:0.9rem; opacity:0.8;">0:00</span>
+                <input type="range" id="seek-bar" value="0" min="0">
+                <span id="seek-max" style="font-size:0.9rem; opacity:0.8;">25:00</span>
+            </div>
+
             <div class="controls">
-                <button class="main-btn" onclick="resetTimer()">Reset</button>
+                <button class="main-btn" onclick="resetTimer()" style="background:rgba(255,255,255,0.2); color:white;">リセット</button>
                 <button class="main-btn" id="start-btn" onclick="requestToggle()">START</button>
             </div>
         </div>
 
         <div id="view-history" class="view">
-            <div class="scroll-area"><div id="calendar"></div></div>
+            <h2 style="margin-top:40px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">作業履歴</h2>
+            <div id="calendar-container">
+                <div id="calendar"></div>
+            </div>
         </div>
 
         <div id="view-settings" class="view">
-            <div class="scroll-area" style="background:rgba(0,0,0,0.5); border-radius:20px;">
-                <h2>Settings</h2>
-                <label>ユーザー名</label><input type="text" id="set-name" class="auth-input">
-                <label>アイコン画像</label><input type="file" id="set-icon" class="auth-input" accept="image/*">
-                <label>アラーム音</label><input type="file" id="set-alarm" class="auth-input" accept="audio/*">
-                <label>背景画像URL</label><input type="text" id="set-bg-url" class="auth-input" placeholder="https://...">
-                <button onclick="saveSettings()" class="main-btn" style="background:var(--accent); width:100%; color:black; margin-top:20px;">Save Changes</button>
+            <div class="glass-panel" style="max-height:80vh; overflow-y:auto;">
+                <h2 style="margin-top:0;">プロフィール＆設定</h2>
+                
+                <label style="font-size:0.9rem;">ユーザー名</label>
+                <input type="text" id="set-name" class="input-field">
+                
+                <label style="font-size:0.9rem;">アイコン画像 (変更する場合のみ選択)</label>
+                <input type="file" id="set-icon" class="input-field" accept="image/*">
+                
+                <label style="font-size:0.9rem;">カスタムアラーム音 (未選択でデフォルト)</label>
+                <input type="file" id="set-alarm" class="input-field" accept="audio/*">
+                
+                <label style="font-size:0.9rem;">背景画像URL (好きな画像のリンクを貼る)</label>
+                <input type="url" id="set-bg-url" class="input-field" placeholder="https://...">
+
+                <hr style="border-color:rgba(255,255,255,0.2); margin:20px 0;">
+
+                <button onclick="saveSettings()" class="main-btn" style="width:100%; background:var(--accent);">設定を保存する</button>
+                <p id="save-msg" style="color:var(--accent); text-align:center; display:none;">保存しました！</p>
             </div>
         </div>
     </div>
 
+    <div id="long-break-modal">
+        <div class="modal-content">
+            <h2 style="margin-top:0;">☕️ 4ポモドーロ完了！</h2>
+            <p>お疲れ様です！長めの休憩を取りましょう。</p>
+            <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:20px;">
+                <button class="modal-btn" onclick="selectLongBreak(15)">15分 休憩</button>
+                <button class="modal-btn" onclick="selectLongBreak(30)">30分 休憩</button>
+                <button class="modal-btn" onclick="selectLongBreak(60)">60分 休憩</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="default-audio" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, collection, addDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, collection, addDoc, query, where, getDocs, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
         const firebaseConfig = {
@@ -152,7 +228,8 @@
             projectId: "sharetimer-fd215",
             storageBucket: "sharetimer-fd215.firebasestorage.app",
             messagingSenderId: "862201995112",
-            appId: "1:862201995112:web:2b1b8d6a5cb74eb5d440dd"
+            appId: "1:862201995112:web:2b1b8d6a5cb74eb5d440dd",
+            measurementId: "G-2DKH6Y8R4C"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -160,36 +237,58 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        // State
-        let timeLeft = 25 * 60, duration = 25 * 60, timerId = null, sessions = 1, mode = 'work', currentRoom = null, roomUnsub = null;
-        window.userData = { name: "Guest", icon: "", alarm: "", bgUrl: "", bgWork: "#0f172a", bgBreak: "#064e3b" };
-        const alarmAudio = new Audio();
+        // --- グローバル状態 ---
+        let timeLeft = 25 * 60, duration = 25 * 60, timerId = null;
+        let sessions = 1, mode = 'work'; // mode: 'work' | 'break' | 'longBreak'
+        let currentRoom = null, roomUnsub = null;
+        let userAudio = new Audio();
+        let allPomodorosCache = []; // ランキング用キャッシュ
 
-        // ログイン監視
+        window.userData = { 
+            name: "ユーザー", icon: "", alarmUrl: "", bgUrl: "", totalPomos: 0 
+        };
+
+        // 通知の許可リクエスト
+        if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission();
+        }
+
+        // --- 初期化・認証 ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                await loadSettings(user.uid);
+                await loadUserSettings(user.uid);
                 switchView('main');
-                loadRanking();
+                fetchAllPomodoros(); // ランキングデータの取得
+                
+                // iOS対策：最初のインタラクションでAudioを初期化するイベントを登録
+                document.body.addEventListener('touchstart', initAudio, { once: true });
+                document.body.addEventListener('click', initAudio, { once: true });
             } else {
                 switchView('login');
             }
         });
 
-        // 画面切り替え
+        // iOSオーディオロック解除
+        function initAudio() {
+            const a = userAudio.src ? userAudio : document.getElementById('default-audio');
+            a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(e => console.log("Audio init blocked:", e));
+        }
+
+        // --- UI / 画面遷移制御 ---
         window.switchView = (id) => {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById('view-' + id).classList.add('active');
             if(id === 'history') renderCalendar();
+            // モバイルならサイドバーを閉じる
+            if(window.innerWidth < 768) document.getElementById('sidebar').classList.remove('open');
         };
 
         window.toggleSidebar = () => {
-            const sb = document.getElementById('sidebar');
-            sb.classList.toggle('open');
+            document.getElementById('sidebar').classList.toggle('open');
             document.body.classList.toggle('content-active-sidebar');
         };
 
-        // --- パーティモード ---
+        // --- パーティモード (同時タイマー) ---
         window.joinRoom = async () => {
             const roomId = document.getElementById('room-input').value;
             if (roomId.length !== 3) return alert("3桁の数字を入力してください");
@@ -199,15 +298,14 @@
             document.getElementById('party-info-ui').style.display = 'block';
             document.getElementById('room-id-display').textContent = roomId;
 
-            // 部屋の同期開始
+            // 部屋の購読開始
             if (roomUnsub) roomUnsub();
             roomUnsub = onSnapshot(doc(db, "rooms", roomId), (snap) => {
                 if (snap.exists()) {
-                    const data = snap.data();
-                    syncTimerFromRoom(data);
+                    syncTimerWithServer(snap.data());
                 } else {
-                    // 初めての部屋なら初期化
-                    setDoc(doc(db, "rooms", roomId), { status: 'idle', mode: 'work', sessions: 1 });
+                    // 初めての部屋作成
+                    setDoc(doc(db, "rooms", roomId), { status: 'idle', mode: 'work', sessions: 1, duration: 25*60, endTime: 0 });
                 }
             });
         };
@@ -220,107 +318,259 @@
             resetTimer();
         };
 
-        // パーティ同期ロジック
-        function syncTimerFromRoom(data) {
+        // --- タイマーのコアロジック (バックグラウンド対応) ---
+        
+        function syncTimerWithServer(data) {
             mode = data.mode;
             sessions = data.sessions;
-            duration = (mode === 'work') ? 25 * 60 : (sessions >= 4 ? 30 * 60 : 5 * 60);
+            duration = data.duration;
 
             if (data.status === 'running') {
-                const serverEndTime = data.endTime;
-                const now = Date.now();
-                timeLeft = Math.max(0, Math.ceil((serverEndTime - now) / 1000));
-                if (!timerId && timeLeft > 0) startLocalTimer(serverEndTime);
+                // サーバーの終了予定時刻から残り時間を逆算
+                const remain = Math.max(0, Math.ceil((data.endTime - Date.now()) / 1000));
+                timeLeft = remain;
+                if (!timerId && timeLeft > 0) {
+                    startLocalHeartbeat(data.endTime);
+                } else if (timeLeft <= 0) {
+                    stopLocalTimer();
+                    handleTimerEnd(); // 途中参加で既に終わっていた場合
+                }
             } else {
                 stopLocalTimer();
-                timeLeft = duration;
+                // もしシークバーによる手動変更があればそれを反映
+                if (data.timeLeft !== undefined) {
+                    timeLeft = data.timeLeft;
+                } else {
+                    timeLeft = duration;
+                }
             }
             updateUI();
         }
 
-        // スタート要求
         window.requestToggle = async () => {
-            // 音声をアンロック（iPad対策）
-            alarmAudio.play().then(() => { alarmAudio.pause(); }).catch(() => {});
+            // ローカル単独モード
+            if (!currentRoom) {
+                if (timerId) {
+                    stopLocalTimer();
+                } else {
+                    startLocalHeartbeat(Date.now() + (timeLeft * 1000));
+                }
+                updateUI();
+                return;
+            }
 
-            if (!currentRoom) return toggleLocalTimer();
-
+            // パーティモード (Firestoreを更新して全員に通知)
             const roomRef = doc(db, "rooms", currentRoom);
             if (timerId) {
-                await updateDoc(roomRef, { status: 'idle' });
+                // 一時停止
+                await updateDoc(roomRef, { status: 'idle', timeLeft: timeLeft });
             } else {
+                // 開始
                 const newEndTime = Date.now() + (timeLeft * 1000);
-                await updateDoc(roomRef, { status: 'running', endTime: newEndTime, mode: mode, sessions: sessions });
+                await updateDoc(roomRef, { status: 'running', endTime: newEndTime, mode: mode, sessions: sessions, duration: duration });
             }
         };
 
-        // --- タイマー本体 ---
-        function startLocalTimer(targetTime) {
+        // バックグラウンドでも時間がズレない Heartbeat（心拍）関数
+        function startLocalHeartbeat(targetTimeMs) {
             if (timerId) clearInterval(timerId);
+            
+            document.getElementById('start-btn').textContent = "PAUSE";
+            document.getElementById('start-btn').style.background = "white";
+
             timerId = setInterval(() => {
                 const now = Date.now();
-                timeLeft = Math.max(0, Math.ceil((targetTime - now) / 1000));
+                timeLeft = Math.max(0, Math.ceil((targetTimeMs - now) / 1000));
                 updateUI();
+
                 if (timeLeft <= 0) {
                     stopLocalTimer();
                     handleTimerEnd();
                 }
-            }, 200);
-            document.getElementById('start-btn').textContent = "PAUSE";
+            }, 500); // 0.5秒に1回確認
         }
 
         function stopLocalTimer() {
-            clearInterval(timerId);
+            if (timerId) clearInterval(timerId);
             timerId = null;
             document.getElementById('start-btn').textContent = "START";
+            document.getElementById('start-btn').style.background = "var(--accent)";
         }
 
-        function updateUI() {
-            const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
-            document.getElementById('timer').textContent = `${m}:${s.toString().padStart(2, '0')}`;
-            document.getElementById('status-label').textContent = mode.toUpperCase();
-            for(let i=1; i<=4; i++) document.getElementById('dot'+i).classList.toggle('active', i <= sessions);
-            document.getElementById('seek-bar').max = duration;
-            document.getElementById('seek-bar').value = duration - timeLeft;
-            applyVisuals();
-        }
-
-        async function handleTimerEnd() {
-            if (mode === 'work') {
-                playAlarm();
-                await savePomo();
-                if (sessions >= 4) {
-                    if(!currentRoom) alert("長休憩の時間です！30分休みましょう。");
-                    initBreak(30);
-                } else {
-                    initBreak(5);
-                }
-            } else {
-                initWork();
-            }
-        }
-
-        // iPad対策: 復帰時に時間を再計算
+        // iPad対策: 画面が戻ってきた時に強制同期
         document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "visible" && currentRoom) {
-                // パーティ中なら部屋情報から強制再同期
-                getDoc(doc(db, "rooms", currentRoom)).then(snap => {
-                    if(snap.exists()) syncTimerFromRoom(snap.data());
-                });
+            if (document.visibilityState === "visible") {
+                if (currentRoom) {
+                    getDoc(doc(db, "rooms", currentRoom)).then(snap => {
+                        if(snap.exists()) syncTimerWithServer(snap.data());
+                    });
+                } else if (timerId) {
+                    // ローカルモードの場合はタイマーは回り続けている前提（差分計算をしているので表示は合う）
+                    updateUI();
+                }
             }
         });
 
-        // --- データ保存・読込 ---
-        async function loadSettings(uid) {
+        // --- タイマー終了時の処理 ---
+        async function handleTimerEnd() {
+            // 1. 音を鳴らす（iOSエラー回避のためtry-catch）
+            try {
+                const audio = userAudio.src ? userAudio : document.getElementById('default-audio');
+                audio.play();
+            } catch(e) { console.warn("Audio blocked on iOS background"); }
+
+            // 2. ブラウザ通知
+            if (Notification.permission === 'granted') {
+                const msg = mode === 'work' ? "作業完了！お疲れ様です。" : "休憩終了！作業に戻りましょう。";
+                const noti = new Notification("Focus Connect", { body: msg + "\nクリックして次へ" });
+                noti.onclick = function() {
+                    window.focus();
+                    this.close();
+                    if(document.getElementById('long-break-modal').style.display !== 'flex') {
+                        requestToggle();
+                    }
+                };
+            }
+
+            // 3. 状態移行と記録
+            if (mode === 'work') {
+                // 非同期で記録（タイマー進行を止めない）
+                recordPomodoro().catch(e => console.error(e));
+
+                if (sessions >= 4) {
+                    // 長休憩
+                    if (currentRoom) {
+                        // パーティモード時は代表してリーダーが選ぶか、固定(30分)にする。今回は固定30分へ自動移行。
+                        alert("4セット完了！長休憩に入ります。");
+                        setMode('longBreak', 30 * 60, 1);
+                    } else {
+                        // ソロならモーダル表示
+                        document.getElementById('long-break-modal').style.display = 'flex';
+                    }
+                } else {
+                    // 短休憩
+                    setMode('break', 5 * 60, sessions);
+                }
+            } else {
+                // 休憩終わり -> 次の作業へ
+                setMode('work', 25 * 60, (mode === 'longBreak') ? 1 : sessions + 1);
+            }
+
+            // パーティモードならFirestoreをidle状態で更新
+            if (currentRoom) {
+                const roomRef = doc(db, "rooms", currentRoom);
+                await updateDoc(roomRef, { status: 'idle', mode: mode, sessions: sessions, duration: duration, timeLeft: duration });
+            }
+        }
+
+        function setMode(newMode, newDuration, newSession) {
+            mode = newMode; duration = newDuration; timeLeft = duration; sessions = newSession;
+            updateUI();
+        }
+
+        window.selectLongBreak = (minutes) => {
+            document.getElementById('long-break-modal').style.display = 'none';
+            setMode('longBreak', minutes * 60, 1);
+            if(Notification.permission === 'granted' && !timerId) requestToggle(); // 自動スタート
+        };
+
+        window.resetTimer = () => {
+            stopLocalTimer();
+            setMode('work', 25 * 60, 1);
+            if(currentRoom) {
+                updateDoc(doc(db, "rooms", currentRoom), { status: 'idle', mode: 'work', sessions: 1, duration: 25*60, timeLeft: 25*60 });
+            }
+        };
+
+        // ユーザーがドットを押してセッションをジャンプ
+        window.setSession = (num) => {
+            if(timerId) return; // 動いてる時は変更不可
+            sessions = num;
+            updateUI();
+            if(currentRoom) updateDoc(doc(db, "rooms", currentRoom), { sessions: num });
+        };
+
+        // --- シークバーの操作 ---
+        const seekBar = document.getElementById('seek-bar');
+        seekBar.addEventListener('input', (e) => {
+            timeLeft = duration - e.target.value;
+            updateUI();
+        });
+        seekBar.addEventListener('change', async (e) => {
+            // 指を離した時にサーバー同期
+            if (currentRoom) {
+                const roomRef = doc(db, "rooms", currentRoom);
+                if (timerId) {
+                    const newEndTime = Date.now() + (timeLeft * 1000);
+                    await updateDoc(roomRef, { endTime: newEndTime });
+                } else {
+                    await updateDoc(roomRef, { timeLeft: timeLeft });
+                }
+            } else if (timerId) {
+                startLocalHeartbeat(Date.now() + (timeLeft * 1000));
+            }
+        });
+
+        // --- 画面更新ロジック ---
+        function updateUI() {
+            // タイマー文字
+            const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+            const timeStr = `${m}:${s.toString().padStart(2, '0')}`;
+            document.getElementById('timer-display').textContent = timeStr;
+            
+            // ブラウザのタブ名更新 (バックグラウンド用)
+            const icon = mode === 'work' ? "🔥" : "☕️";
+            document.title = `${timeStr} - ${icon} Focus`;
+
+            // ラベル
+            document.getElementById('status-label').textContent = mode === 'work' ? "WORK" : (mode === 'break' ? "SHORT BREAK" : "LONG BREAK");
+
+            // ドット
+            for(let i=1; i<=4; i++) {
+                document.getElementById('dot'+i).className = (i <= sessions) ? 'dot active' : 'dot';
+            }
+
+            // シークバー
+            seekBar.max = duration;
+            seekBar.value = duration - timeLeft;
+            document.getElementById('seek-max').textContent = `${Math.floor(duration/60)}:00`;
+
+            // 背景とテーマ
+            let bgColor = varColor('--bg-work');
+            if(mode === 'break') bgColor = varColor('--bg-break');
+            if(mode === 'longBreak') bgColor = varColor('--bg-long');
+            
+            // カスタム背景があれば優先
+            if (userData.bgUrl) {
+                document.body.style.backgroundImage = `url(${userData.bgUrl})`;
+                document.body.style.backgroundColor = bgColor; // 画像が読み込めない時用
+            } else {
+                document.body.style.backgroundImage = "none";
+                document.body.style.backgroundColor = bgColor;
+            }
+        }
+        function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+        // --- ユーザー設定と保存 ---
+        async function loadUserSettings(uid) {
             const snap = await getDoc(doc(db, "users", uid));
             if (snap.exists()) {
                 window.userData = { ...window.userData, ...snap.data() };
-                document.getElementById('side-user-name').textContent = window.userData.name;
-                document.getElementById('set-name').value = window.userData.name;
-                if (window.userData.icon) document.getElementById('side-user-icon').src = window.userData.icon;
-                if (window.userData.alarm) alarmAudio.src = window.userData.alarm;
             }
-            applyVisuals();
+            
+            // UIに反映
+            document.getElementById('side-user-name').textContent = userData.name;
+            document.getElementById('set-name').value = userData.name;
+            if (userData.icon) {
+                document.getElementById('side-user-icon').src = userData.icon;
+            }
+            if (userData.bgUrl) {
+                document.getElementById('set-bg-url').value = userData.bgUrl;
+            }
+            if (userData.alarmUrl) {
+                userAudio.src = userData.alarmUrl;
+            }
+            updateUI();
         }
 
         window.saveSettings = async () => {
@@ -331,74 +581,143 @@
             const alarmFile = document.getElementById('set-alarm').files[0];
 
             let updates = { name, bgUrl };
-            if (iconFile) {
-                const r = ref(storage, `icons/${uid}`);
-                await uploadBytes(r, iconFile);
-                updates.icon = await getDownloadURL(r);
-            }
-            if (alarmFile) {
-                const r = ref(storage, `alarms/${uid}`);
-                await uploadBytes(r, alarmFile);
-                updates.alarm = await getDownloadURL(r);
-            }
 
-            await setDoc(doc(db, "users", uid), updates, { merge: true });
-            alert("Saved!");
-            location.reload();
+            try {
+                // 画像アップロード
+                if (iconFile) {
+                    const r = ref(storage, `icons/${uid}`);
+                    await uploadBytes(r, iconFile);
+                    updates.icon = await getDownloadURL(r);
+                }
+                // 音声アップロード
+                if (alarmFile) {
+                    const r = ref(storage, `alarms/${uid}`);
+                    await uploadBytes(r, alarmFile);
+                    updates.alarmUrl = await getDownloadURL(r);
+                }
+
+                await setDoc(doc(db, "users", uid), updates, { merge: true });
+                
+                // メッセージ表示と再読み込み
+                const msg = document.getElementById('save-msg');
+                msg.style.display = 'block';
+                setTimeout(() => { msg.style.display = 'none'; location.reload(); }, 1500);
+
+            } catch (error) {
+                alert("保存に失敗しました: " + error.message);
+            }
         };
 
-        function applyVisuals() {
-            if (window.userData.bgUrl) {
-                document.body.style.backgroundImage = `url(${window.userData.bgUrl})`;
-            } else {
-                document.body.style.backgroundImage = "none";
-                document.body.style.backgroundColor = (mode === 'work') ? window.userData.bgWork : window.userData.bgBreak;
-            }
-        }
-
-        async function savePomo() {
+        // --- 記録とランキング ---
+        async function recordPomodoro() {
+            const uid = auth.currentUser.uid;
+            const ts = serverTimestamp();
+            
+            // 履歴に追加
             await addDoc(collection(db, "pomodoros"), {
-                uid: auth.currentUser.uid,
-                name: window.userData.name,
-                icon: window.userData.icon || "",
-                timestamp: serverTimestamp()
+                uid: uid,
+                name: userData.name,
+                icon: userData.icon || "",
+                timestamp: ts
             });
-            loadRanking();
+
+            // 合計回数を更新
+            const userRef = doc(db, "users", uid);
+            await setDoc(userRef, { totalPomos: (userData.totalPomos || 0) + 1 }, { merge: true });
+            userData.totalPomos += 1;
+            document.getElementById('side-user-pomo').textContent = `Total: ${userData.totalPomos} ポモ`;
+
+            fetchAllPomodoros(); // ランキング再取得
         }
 
-        // --- ヘルパー ---
-        function initWork() { mode = 'work'; sessions = (sessions >= 4) ? 1 : sessions + 1; timeLeft = 25 * 60; duration = 25 * 60; updateUI(); }
-        function initBreak(m) { mode = 'break'; timeLeft = m * 60; duration = m * 60; updateUI(); }
-        function playAlarm() { alarmAudio.play().catch(() => {}); }
-        window.resetTimer = () => { stopLocalTimer(); initWork(); };
+        // 過去7日分のデータを一気に取得してキャッシュ
+        async function fetchAllPomodoros() {
+            const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+            const q = query(collection(db, "pomodoros"), where("timestamp", ">", sevenDaysAgo), orderBy("timestamp", "desc"));
+            const snap = await getDocs(q);
+            allPomodorosCache = snap.docs.map(d => d.data());
+            showRanking('today'); // デフォルト表示
+        }
 
-        // --- 認証 ---
+        window.showRanking = (period) => {
+            // タブの見た目変更
+            document.querySelectorAll('.r-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const now = new Date();
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            const yesterdayStart = todayStart - 86400000;
+
+            const counts = {}; // { userName: count }
+
+            allPomodorosCache.forEach(p => {
+                if(!p.timestamp) return;
+                const pTime = p.timestamp.toDate().getTime();
+                
+                let match = false;
+                if (period === 'today' && pTime >= todayStart) match = true;
+                if (period === 'yesterday' && pTime >= yesterdayStart && pTime < todayStart) match = true;
+                if (period === 'week') match = true; // クエリが既に過去7日
+
+                if (match) {
+                    counts[p.name] = (counts[p.name] || 0) + 1;
+                }
+            });
+
+            // ソートしてHTML生成
+            const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+            const listEl = document.getElementById('ranking-list');
+            
+            if(sorted.length === 0) {
+                listEl.innerHTML = "<div style='text-align:center; opacity:0.6; padding:10px;'>記録がありません</div>";
+                return;
+            }
+
+            listEl.innerHTML = sorted.map((item, index) => {
+                const rankIcon = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index+1}.`;
+                return `<div class="rank-item">
+                    <span>${rankIcon} ${item[0]}</span>
+                    <span style="font-weight:bold; color:var(--accent);">${item[1]} ポモ</span>
+                </div>`;
+            }).join('');
+        };
+
+        // --- カレンダー ---
+        let cal = null;
+        async function renderCalendar() {
+            const uid = auth.currentUser.uid;
+            const q = query(collection(db, "pomodoros"), where("uid", "==", uid));
+            const snap = await getDocs(q);
+            
+            // イベントデータの作成 (1日にまとめるか、1回ずつ表示するか)
+            const events = snap.docs.map(d => {
+                return { title: "🍅 1ポモ", start: d.data().timestamp?.toDate(), color: '#38bdf8' };
+            });
+
+            if(!cal) {
+                cal = new FullCalendar.Calendar(document.getElementById('calendar'), { 
+                    initialView: 'dayGridMonth', 
+                    events: events,
+                    height: '100%',
+                    headerToolbar: { left: 'prev,next', center: 'title', right: 'today' }
+                });
+            } else {
+                cal.removeAllEvents();
+                cal.addEventSource(events);
+            }
+            // 表示切り替え時の描画バグ修正
+            setTimeout(() => cal.render(), 100);
+        }
+
+        // --- 認証系関数 ---
         window.loginEmail = async () => {
             const e = document.getElementById('login-email').value, p = document.getElementById('login-pass').value;
+            if(!e || !p) return alert("入力してください");
             try { await signInWithEmailAndPassword(auth, e, p); }
             catch { await createUserWithEmailAndPassword(auth, e, p); }
         };
         window.loginGoogle = () => signInWithPopup(auth, new GoogleAuthProvider());
         window.logout = () => signOut(auth);
-
-        // --- ランキング & カレンダー ---
-        async function loadRanking() {
-            const qPomo = query(collection(db, "pomodoros"), where("timestamp", ">", new Date(Date.now() - 86400000)));
-            const snap = await getDocs(qPomo);
-            const counts = {};
-            snap.forEach(d => { const n = d.data().name; counts[n] = (counts[n] || 0) + 1; });
-            const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
-            document.getElementById('ranking-list').innerHTML = sorted.map(([n,c]) => `<div>${n}: ${c}ポモ</div>`).join('');
-        }
-
-        let cal = null;
-        async function renderCalendar() {
-            const qPomo = query(collection(db, "pomodoros"), where("uid", "==", auth.currentUser.uid));
-            const snap = await getDocs(qPomo);
-            const events = snap.map(d => ({ title: "1ポモ", start: d.data().timestamp?.toDate() }));
-            if(!cal) cal = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView: 'dayGridMonth', events });
-            cal.render();
-        }
 
     </script>
 </body>
