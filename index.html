@@ -354,8 +354,15 @@
             if(docSnap.exists()) {
                 window.userData = { ...window.userData, ...docSnap.data() };
                 
+                // 表示する名前を決定（設定した名前 ＞ Googleの名前 ＞ メールアドレスの@の前の部分）
+                const displayName = userData.displayName || currentUser.displayName || currentUser.email.split('@')[0];
+                
                 // UIへの反映
-                document.getElementById('setting-name').value = userData.displayName || currentUser.displayName || "";
+                document.getElementById('setting-name').value = displayName;
+                
+                // ★ここを追加：左上のナビゲーションバーの名前も更新する！
+                document.getElementById('nav-user-name').textContent = displayName;
+                
                 document.getElementById('setting-bg-work').value = userData.bgWork || "#0f172a";
                 document.getElementById('setting-bg-break').value = userData.bgBreak || "#064e3b";
                 
@@ -375,7 +382,6 @@
             }
             applyBgColor(); 
         }
-
         window.saveSettings = async () => {
             const btn = document.getElementById('save-btn'); 
             btn.textContent = "保存中... (画像の容量により数秒かかります)";
