@@ -68,10 +68,18 @@
 
         /* --- Timer UI --- */
         #status-label { letter-spacing: 0.3rem; opacity: 0.8; margin-bottom: 20px; text-transform: uppercase; font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-weight: bold;}
-       .session-dots { display: flex; gap: 0; margin-bottom: 1rem; }
+       .session-dots { 
+            display: flex; 
+            gap: 0; 
+            margin-bottom: 1rem; 
+            align-items: center; 
+        }
         .dot-wrapper { 
-            padding: 20px 12px; /* 透明なクリックエリアを上下左右に大幅拡大 */
-            margin: -15px 0;    /* 当たり判定を広げた分、見た目の位置がズレないよう相殺 */
+            /* 上10px、左右15px、下30px と、下方向に判定を大きく広げる */
+            padding: 10px 15px 30px 15px; 
+            /* 判定を広げた分、見た目の位置や下のタイマーがズレないように相殺する */
+            margin-top: -10px;
+            margin-bottom: -30px;
             cursor: pointer; 
             -webkit-tap-highlight-color: transparent; 
         }
