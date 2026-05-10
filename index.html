@@ -18,73 +18,89 @@
             /* 画像を背景にした時用の設定 */
             background-size: cover; background-position: center; background-attachment: fixed; background-repeat: no-repeat;
         }
-        /* Navigation */
+        /* --- Navigation --- */
         nav {
             display: flex; justify-content: space-between; align-items: center;
             padding: 10px 20px; background: var(--nav-bg); backdrop-filter: blur(10px);
-            z-index: 100;
+            z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         .nav-links button {
             background: none; border: none; color: white; cursor: pointer;
             margin-left: 15px; font-size: 0.9rem; opacity: 0.7; transition: 0.2s;
         }
-        .nav-links button:hover, .nav-links button.active { opacity: 1; color: var(--accent); }
+        .nav-links button:hover, .nav-links button.active { opacity: 1; color: var(--accent); font-weight: bold;}
         .user-info { display: flex; align-items: center; gap: 10px; }
         .user-icon { width: 32px; height: 32px; border-radius: 50%; background: #ccc; object-fit: cover;}
 
-        /* Views */
+        /* --- Views --- */
         .view { display: none; flex: 1; overflow-y: auto; padding: 20px; }
         .view.active { display: flex; }
 
-        /* Login View */
+        /* --- Login View --- */
         #view-login { flex-direction: column; align-items: center; justify-content: center; }
-        .auth-card { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 12px; text-align: center; width: 100%; max-width: 320px;}
-        .auth-input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; border-radius: 6px; border: none;}
-        .auth-btn { width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .auth-card { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 30px; border-radius: 12px; text-align: center; width: 100%; max-width: 350px; border: 1px solid rgba(255,255,255,0.1);}
+        .auth-input { width: 100%; padding: 12px; margin: 8px 0; box-sizing: border-box; border-radius: 6px; border: none;}
+        .auth-btn { width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;}
         .btn-google { background: white; color: #333; }
         .btn-email { background: var(--accent); color: black; }
 
-        /* Main View (Timer & Ranking) */
-        #view-main { flex-direction: row; padding: 0; }
+        /* --- Main View (Timer & Ranking) --- */
+        #view-main { flex-direction: row; padding: 0; position: relative;}
         #timer-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;}
-        #ranking-section { width: 300px; background: rgba(0,0,0,0.3); border-left: 1px solid rgba(255,255,255,0.1); padding: 20px; display: flex; flex-direction: column;}
-        @media (max-width: 768px) { #view-main { flex-direction: column; } #ranking-section { width: auto; border-left: none; border-top: 1px solid rgba(255,255,255,0.1); } }
-
-        /* Timer UI */
-        #status-label { letter-spacing: 0.3rem; opacity: 0.7; margin-bottom: 20px; text-transform: uppercase; font-size: 1.2rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5);}
-        .session-dots { display: flex; gap: 8px; margin-bottom: 1rem; }
-        .dot-wrapper { padding: 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-        .dot { width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: 0.4s; pointer-events: none; }
-        .dot.active { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
-        #timer { font-size: clamp(4rem, 15vw, 10rem); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; margin: 0; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         
-        /* Seek Bar */
-        .progress-container { width: 80%; max-width: 500px; margin: 2rem 0; }
+        #ranking-section { width: 320px; background: rgba(0,0,0,0.3); border-left: 1px solid rgba(255,255,255,0.1); padding: 20px; display: flex; flex-direction: column; transition: 0.3s;}
+        #ranking-section.collapsed { display: none !important; }
+        
+        /* ランキング開閉ボタン */
+        .ranking-toggle-btn {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(0,0,0,0.5); color: white; border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 15px; border-radius: 8px; cursor: pointer; backdrop-filter: blur(5px);
+            font-size: 0.9rem; z-index: 10; transition: 0.2s;
+        }
+        .ranking-toggle-btn:hover { background: var(--accent); color: black; font-weight: bold; }
+        
+        @media (max-width: 768px) { 
+            #view-main { flex-direction: column; } 
+            #ranking-section { width: auto; border-left: none; border-top: 1px solid rgba(255,255,255,0.1); } 
+            .ranking-toggle-btn { top: 10px; right: 10px; }
+        }
+
+        /* --- Timer UI --- */
+        #status-label { letter-spacing: 0.3rem; opacity: 0.8; margin-bottom: 20px; text-transform: uppercase; font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-weight: bold;}
+        .session-dots { display: flex; gap: 10px; margin-bottom: 1rem; }
+        .dot-wrapper { padding: 5px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .dot { width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: 0.3s; pointer-events: none; }
+        .dot.active { background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+        #timer { font-size: clamp(4rem, 18vw, 12rem); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; margin: 0; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        
+        .progress-container { width: 80%; max-width: 500px; margin: 2.5rem 0; }
         input[type="range"] { width: 100%; -webkit-appearance: none; background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; outline: none; cursor: pointer; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: white; border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: white; border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
         
         .controls { display: flex; gap: 1.5rem; }
-        .main-btn { padding: 1rem 2rem; font-size: 1.1rem; border-radius: 50px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: 0.2s; font-weight: bold; }
-        #start-btn { background: var(--text); color: #000; min-width: 150px; }
+        .main-btn { padding: 1rem 2.5rem; font-size: 1.2rem; border-radius: 50px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: 0.2s; font-weight: bold; }
+        #start-btn { background: var(--text); color: #000; min-width: 160px; }
 
-        /* Modals */
+        /* --- Modals --- */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
-        .modal-content { text-align: center; }
-        .modal-btn { background: var(--accent); color: black; border: none; padding: 15px 30px; margin: 10px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; font-weight: bold;}
+        .modal-content { text-align: center; background: var(--bg-work); padding: 40px; border-radius: 20px; border: 1px solid var(--accent);}
+        .modal-btn { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 15px 30px; margin: 10px; border-radius: 10px; cursor: pointer; font-size: 1.2rem; font-weight: bold; transition:0.2s;}
+        .modal-btn:hover { background: var(--accent); color: black; }
 
-        /* Settings & History */
-        .settings-card { max-width: 500px; margin: 0 auto; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 12px; width: 100%; backdrop-filter: blur(10px);}
+        /* --- Settings & History --- */
+        .settings-card { max-width: 500px; margin: 0 auto; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 15px; width: 100%; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);}
         .settings-group { margin-bottom: 20px; }
-        .settings-group label { display: block; margin-bottom: 8px; opacity: 0.8; }
-        #calendar { max-width: 800px; margin: 0 auto; width: 100%; background: white; color: black; padding: 10px; border-radius: 8px;}
+        .settings-group label { display: block; margin-bottom: 8px; opacity: 0.8; font-size: 0.9rem;}
+        #calendar { max-width: 800px; margin: 0 auto; width: 100%; background: white; color: black; padding: 15px; border-radius: 10px;}
 
-        /* Ranking Tabs */
-        .tab-container { display: flex; gap: 4px; background: rgba(255,255,255,0.1); padding: 4px; border-radius: 8px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; border: none; background: none; color: white; padding: 8px 0; font-size: 0.8rem; cursor: pointer; border-radius: 6px; opacity: 0.5; }
+        /* --- Ranking Tabs --- */
+        .tab-container { display: flex; gap: 4px; background: rgba(255,255,255,0.1); padding: 5px; border-radius: 8px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; border: none; background: none; color: white; padding: 8px 0; font-size: 0.9rem; cursor: pointer; border-radius: 6px; opacity: 0.5; transition: 0.2s;}
         .tab-btn.active { background: var(--accent); color: #000; opacity: 1; font-weight: bold; }
-        .ranking-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .ranking-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .ranking-name { display: flex; align-items: center; gap: 10px;}
-        .ranking-icon { width: 24px; height: 24px; border-radius: 50%; object-fit: cover;}
+        .ranking-icon { width: 28px; height: 28px; border-radius: 50%; object-fit: cover;}
     </style>
 </head>
 <body>
@@ -104,7 +120,7 @@
 
     <div id="view-login" class="view active">
         <div class="auth-card">
-            <h2>Focus Connect</h2>
+            <h2 style="margin-top: 0;">Focus Connect Pro</h2>
             <p style="margin-bottom: 20px; opacity: 0.8;">ログインして記録を始めましょう</p>
             <input type="email" id="email-input" class="auth-input" placeholder="メールアドレス">
             <input type="password" id="password-input" class="auth-input" placeholder="パスワード">
@@ -116,10 +132,12 @@
 
     <div id="view-main" class="view">
         <div id="timer-section">
+            <button onclick="toggleRanking()" class="ranking-toggle-btn" id="show-ranking-btn" style="display:none;">🏆 ランキング</button>
+            
             <div id="status-label">READY</div>
             
             <div class="session-dots">
-                <div class="dot-wrapper" onclick="setSet(1)"><div class="dot"></div></div>
+                <div class="dot-wrapper" onclick="setSet(1)"><div class="dot active"></div></div>
                 <div class="dot-wrapper" onclick="setSet(2)"><div class="dot"></div></div>
                 <div class="dot-wrapper" onclick="setSet(3)"><div class="dot"></div></div>
                 <div class="dot-wrapper" onclick="setSet(4)"><div class="dot"></div></div>
@@ -133,8 +151,12 @@
                 <button class="main-btn" id="start-btn" onclick="toggleTimer()">START</button>
             </div>
         </div>
+
         <div id="ranking-section">
-            <h3 style="margin-top:0; border-bottom: 1px solid var(--accent); padding-bottom:10px;">🏆 RANKING</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--accent); padding-bottom:10px; margin-bottom:15px;">
+                <h3 style="margin:0;">🏆 RANKING</h3>
+                <button onclick="toggleRanking()" style="background:none; border:none; color:white; cursor:pointer; opacity:0.7; font-size:1.2rem; transition:0.2s;" title="閉じる">✖</button>
+            </div>
             <div class="tab-container">
                 <button onclick="changeRankingTab('today')" id="tab-today" class="tab-btn active">今日</button>
                 <button onclick="changeRankingTab('yesterday')" id="tab-yesterday" class="tab-btn">昨日</button>
@@ -153,17 +175,17 @@
 
     <div id="view-settings" class="view">
         <div class="settings-card">
-            <h2>設定</h2>
+            <h2 style="margin-top: 0;">設定</h2>
             
             <div class="settings-group">
                 <label>ユーザー名</label>
-                <input type="text" id="setting-name" class="auth-input">
+                <input type="text" id="setting-name" class="auth-input" style="background: rgba(255,255,255,0.9); color: black;">
             </div>
             
             <hr style="border-top: 1px solid rgba(255,255,255,0.2); margin: 20px 0;">
 
             <div class="settings-group">
-                <label style="font-weight: bold; font-size: 1.1rem; color: var(--accent);">背景の表示設定</label>
+                <label style="font-weight: bold; font-size: 1.1rem; color: var(--accent); opacity: 1;">背景の表示設定</label>
                 <div style="display:flex; gap: 20px; align-items:center; margin-top: 10px;">
                     <label style="cursor:pointer; opacity:1;"><input type="radio" name="bg-type" value="color" checked onchange="toggleBgSettings()"> 🎨 色を指定</label>
                     <label style="cursor:pointer; opacity:1;"><input type="radio" name="bg-type" value="image" onchange="toggleBgSettings()"> 🖼 画像を使用</label>
@@ -185,7 +207,7 @@
                 <div class="settings-group">
                     <label>背景画像 (PNG/JPG等)</label>
                     <p style="font-size:0.8rem; opacity:0.7; margin-top:0;">※新しい画像をアップロードすると過去のものは上書きされます</p>
-                    <input type="file" id="setting-bg-image" accept="image/*" class="auth-input" style="background:none;">
+                    <input type="file" id="setting-bg-image" accept="image/*" class="auth-input" style="background:rgba(255,255,255,0.1); color:white;">
                 </div>
             </div>
 
@@ -193,11 +215,11 @@
 
             <div class="settings-group">
                 <label>アイコン画像 (PNG/JPG)</label>
-                <input type="file" id="setting-icon" accept="image/*" class="auth-input" style="background:none;">
+                <input type="file" id="setting-icon" accept="image/*" class="auth-input" style="background:rgba(255,255,255,0.1); color:white;">
             </div>
             <div class="settings-group">
                 <label>アラーム音 (MP3/WAV)</label>
-                <input type="file" id="setting-alarm" accept="audio/*" class="auth-input" style="background:none;">
+                <input type="file" id="setting-alarm" accept="audio/*" class="auth-input" style="background:rgba(255,255,255,0.1); color:white;">
             </div>
             
             <button onclick="saveSettings()" class="auth-btn btn-email" id="save-btn">設定を保存</button>
@@ -207,7 +229,7 @@
 
     <div id="long-break-modal" class="modal">
         <div class="modal-content">
-            <h2 style="font-size: 2.5rem; margin-bottom: 20px;">Long Break ☕</h2>
+            <h2 style="font-size: 2.5rem; margin-bottom: 20px; margin-top:0;">Long Break ☕</h2>
             <p>4セット(1ポモ)完了お疲れ様です！休憩時間を選んでください。</p>
             <div style="display:flex; gap:15px; margin-top: 30px; justify-content: center;">
                 <button class="modal-btn" onclick="setLongBreak(15)">15分</button>
@@ -223,7 +245,7 @@
         import { getFirestore, collection, addDoc, query, where, getDocs, orderBy, serverTimestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
-        // Your Firebase config
+        // Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyCZh4ME9QimEx62f7SLc4F3lyorTzml_hY",
             authDomain: "sharetimer-fd215.firebaseapp.com",
@@ -240,9 +262,23 @@
 
         // Global Variables
         window.currentUser = null;
-        // 背景画像のURLとタイプ(color or image)を管理情報に追加
         window.userData = { bgType: "color", bgImageUrl: null, bgWork: "#0f172a", bgBreak: "#064e3b", alarmUrl: null };
         let currentAudio = null;
+
+        // --- ランキング折りたたみ処理 ---
+        window.toggleRanking = () => {
+            const rankingSec = document.getElementById('ranking-section');
+            const showBtn = document.getElementById('show-ranking-btn');
+            
+            rankingSec.classList.toggle('collapsed');
+            
+            // 畳まれたらボタンを表示、開いたら非表示
+            if(rankingSec.classList.contains('collapsed')) {
+                showBtn.style.display = 'block';
+            } else {
+                showBtn.style.display = 'none';
+            }
+        };
 
         // --- View Navigation ---
         window.switchView = function(viewId) {
@@ -250,6 +286,7 @@
             document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('active'));
             document.getElementById(`view-${viewId}`).classList.add('active');
             if(document.getElementById(`nav-${viewId}`)) document.getElementById(`nav-${viewId}`).classList.add('active');
+            
             if(viewId === 'history') loadCalendar();
             if(viewId === 'main') loadRanking('today');
         };
@@ -262,6 +299,11 @@
                 document.getElementById('nav-user-name').textContent = user.displayName || user.email.split('@')[0];
                 switchView('main');
                 await loadUserSettings(); // ここで設定を読み込み・適用
+                
+                // iOS対策で初回のタップ時にAudioをアンロック
+                document.addEventListener('touchstart', unlockAudio, { once: true });
+                document.addEventListener('click', unlockAudio, { once: true });
+
                 if (Notification.permission !== 'denied') Notification.requestPermission();
             } else {
                 window.currentUser = null;
@@ -269,6 +311,12 @@
                 switchView('login');
             }
         });
+
+        function unlockAudio() {
+            if(!currentAudio) currentAudio = new Audio();
+            if(userData.alarmUrl) { currentAudio.src = userData.alarmUrl; }
+            currentAudio.play().then(() => currentAudio.pause()).catch(()=>{});
+        }
 
         window.loginWithGoogle = () => {
             signInWithPopup(auth, new GoogleAuthProvider()).catch(e => alert("ログインエラー: " + e.message));
@@ -296,7 +344,7 @@
             const type = document.querySelector('input[name="bg-type"]:checked').value;
             document.getElementById('setting-bg-color-area').style.display = type === 'color' ? 'block' : 'none';
             document.getElementById('setting-bg-image-area').style.display = type === 'image' ? 'block' : 'none';
-            // ラジオボタンを切り替えたら即座にプレビューさせる（保存はされていない）
+            // ラジオボタンを切り替えたらプレビュー
             window.userData.bgType = type;
             applyBgColor(); 
         };
@@ -315,7 +363,7 @@
                 if(userData.bgType) {
                     document.querySelector(`input[name="bg-type"][value="${userData.bgType}"]`).checked = true;
                 }
-                toggleBgSettings(); // エリアの表示切替
+                toggleBgSettings(); 
 
                 if(userData.photoURL) {
                     document.getElementById('nav-user-icon').src = userData.photoURL;
@@ -325,7 +373,7 @@
                     currentAudio.src = userData.alarmUrl;
                 }
             }
-            applyBgColor(); // 色か画像かを反映
+            applyBgColor(); 
         }
 
         window.saveSettings = async () => {
@@ -359,7 +407,7 @@
                     currentAudio.src = updates.alarmUrl;
                 }
                 if(bgImgFile) {
-                    // 固定のパス名を使うため、新しい画像がアップされると古い画像は自動的に上書きされて消滅します
+                    // 固定パスに保存し、自動的に上書き（アーカイブしない）
                     const bgRef = ref(storage, `backgrounds/${currentUser.uid}`);
                     await uploadBytes(bgRef, bgImgFile);
                     updates.bgImageUrl = await getDownloadURL(bgRef);
@@ -378,17 +426,16 @@
             } finally {
                 btn.textContent = "設定を保存";
                 btn.disabled = false;
-                applyBgColor(); // 保存後に再適用
+                applyBgColor(); 
             }
         };
 
-        // --- Timer Logic & Background Apply ---
+        // --- Timer Logic (iOS Safe) ---
         let duration = 25 * 60, timeLeft = 25 * 60, endTime = null, timerId = null, sessions = 1, mode = 'work';
         const timerDisplay = document.getElementById('timer'), startBtn = document.getElementById('start-btn'), seekBar = document.getElementById('seek-bar');
         const dots = document.querySelectorAll('.dot'), statusLabel = document.getElementById('status-label');
 
         function applyBgColor() {
-            // 変数への色適用は常に行う
             document.documentElement.style.setProperty('--bg-work', window.userData.bgWork || "#0f172a");
             document.documentElement.style.setProperty('--bg-break', window.userData.bgBreak || "#064e3b");
             
@@ -413,7 +460,7 @@
             document.title = `[${timeStr}] ${labelText}`;
         }
 
-        window.setSet = (n) => { sessions = n; updateUI(); };
+        window.setSet = (n) => { if(!timerId){ sessions = n; updateUI(); } };
 
         seekBar.oninput = function() {
             timeLeft = duration - parseInt(this.value);
@@ -422,57 +469,53 @@
         };
 
         window.toggleTimer = () => {
-            if(window.userData.alarmUrl && !currentAudio) {
-                currentAudio = new Audio(window.userData.alarmUrl);
-            }
-            if(currentAudio) {
-                currentAudio.play().then(()=> { currentAudio.pause(); currentAudio.currentTime=0; }).catch(()=>{});
-            }
-
             if (timerId) {
                 clearInterval(timerId); timerId = null;
                 startBtn.textContent = "START";
+                startBtn.style.background = "var(--text)";
+                startBtn.style.color = "#000";
             } else {
                 endTime = Date.now() + (timeLeft * 1000);
                 statusLabel.textContent = mode.toUpperCase();
+                startBtn.textContent = "PAUSE";
+                startBtn.style.background = "white";
+                startBtn.style.color = "#000";
+                
+                // iPad/iOS対応：0.5秒おきの同期
                 timerId = setInterval(() => {
                     timeLeft = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
                     updateUI();
                     if(timeLeft <= 0) { 
                         clearInterval(timerId); timerId = null; 
                         startBtn.textContent = "START";
+                        startBtn.style.background = "var(--text)";
                         handleEnd(); 
                     }
-                }, 200);
-                startBtn.textContent = "PAUSE";
+                }, 500);
             }
         };
 
+        // バックグラウンド復帰時の時間再計算
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible" && timerId && endTime) {
+                timeLeft = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
+                updateUI();
+                if(timeLeft <= 0) { clearInterval(timerId); timerId=null; handleEnd(); }
+            }
+        });
+
         window.resetTimer = () => {
-            clearInterval(timerId); timerId = null;
-            timeLeft = duration; updateUI(); startBtn.textContent = "START";
+            if(timerId) clearInterval(timerId); timerId = null;
+            timeLeft = duration; updateUI(); 
+            startBtn.textContent = "START"; startBtn.style.background = "var(--text)";
         };
 
         async function handleEnd() {
-            playAlarm();
-            
-            if (Notification.permission === 'granted') {
-                const noti = new Notification(
-                    mode === 'work' ? "作業完了！☕️" : "休憩終了！💻", 
-                    { body: "通知をクリックして次を開始" }
-                );
-                noti.onclick = function() {
-                    window.focus(); 
-                    this.close();   
-                    if (document.getElementById('long-break-modal').style.display !== 'flex') {
-                        toggleTimer(); 
-                    }
-                };
-            }
+            const previousMode = mode;
 
-            if (mode === 'work') {
-                await savePomoRecord();
-
+            // 1. 次のモードへ画面を切り替え＆記録（止まらないように非同期で投げる）
+            if (previousMode === 'work') {
+                savePomoRecord().catch(e=>console.error(e));
                 if (sessions >= 4) {
                     document.getElementById('long-break-modal').style.display = 'flex';
                 } else {
@@ -481,7 +524,29 @@
             } else {
                 initWork();
             }
+
+            // 2. 音の再生（iOSのブロック回避）
+            try {
+                if(currentAudio && window.userData.alarmUrl) {
+                    currentAudio.currentTime = 0; currentAudio.play();
+                } else fallbackBeep();
+            } catch(e) { console.warn("Audio blocked"); }
+
+            // 3. 通知
+            if (Notification.permission === 'granted') {
+                try {
+                    const noti = new Notification(
+                        previousMode === 'work' ? "作業完了！☕️" : "休憩終了！💻", 
+                        { body: "通知をタップして次を開始" }
+                    );
+                    noti.onclick = function() {
+                        window.focus(); this.close();   
+                        if (document.getElementById('long-break-modal').style.display !== 'flex') toggleTimer(); 
+                    };
+                } catch(e) {}
+            }
         }
+
         async function savePomoRecord() {
             if(!currentUser) return;
             try {
@@ -491,7 +556,7 @@
                     photoURL: window.userData.photoURL || "https://via.placeholder.com/32",
                     timestamp: serverTimestamp()
                 });
-                loadRanking('today'); 
+                if(document.getElementById('view-main').classList.contains('active')) loadRanking('today'); 
             } catch(e) { console.error("記録エラー", e); }
         }
 
@@ -512,12 +577,6 @@
         }
 
         window.setLongBreak = (m) => { document.getElementById('long-break-modal').style.display='none'; sessions = 4; initBreak(m); }
-
-        function playAlarm() { 
-            if(currentAudio) {
-                currentAudio.currentTime = 0; currentAudio.play().catch(e=>fallbackBeep());
-            } else fallbackBeep();
-        }
 
         function fallbackBeep() {
             const ctx=new (window.AudioContext || window.webkitAudioContext)(), osc=ctx.createOscillator(), g=ctx.createGain();
