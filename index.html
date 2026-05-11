@@ -480,29 +480,47 @@
             }
         };
 
+       // --- ★修正版：ポモ数の手動削除処理 ---
         window.removeCustomPomo = async () => {
             if(!currentUser) return;
             const dateStr = document.getElementById('edit-pomo-date').value;
             if(!dateStr) return alert("日付を選択してください。");
             
-            // 指定日の0時〜23時59分までの範囲で検索
-            const start = new Date(dateStr + "T00:00:00");
-            const end = new Date(dateStr + "T23:59:59");
+            // 指定日の開始・終了時刻（ミリ秒）を取得
+            const start = new Date(dateStr + "T00:00:00").getTime();
+            const end = new Date(dateStr + "T23:59:59").getTime();
             
-            const q = query(collection(db, "pomodoros"), 
-                where("uid", "==", currentUser.uid),
-                where("timestamp", ">=", start),
-                where("timestamp", "<=", end)
-            );
+            // 複合インデックスエラーを避けるため、一旦自分の記録だけを全て取得する
+            const q = query(collection(db, "pomodoros"), where("uid", "==", currentUser.uid));
             
             try {
                 const snap = await getDocs(q);
-                if(snap.empty) {
+                let targetDoc = null;
+
+                // 取得した記録の中から、指定した日付に該当するものを1つだけ探し出す
+                for (let docSnap of snap.docs) {
+                    const data = docSnap.data();
+                    if (data.timestamp) {
+                        const recordTime = data.timestamp.toDate().getTime();
+                        if (recordTime >= start && recordTime <= end) {
+                            targetDoc = docSnap;
+                            break; // 1件見つけたらストップ
+                        }
+                    }
+                }
+
+                if (!targetDoc) {
                     return alert(`${dateStr} には削除できるポモ記録がありません。`);
                 }
-                // 見つかった記録のうち、1つだけを削除
-                await deleteDoc(snap.docs[0].ref);
+                
+                // 見つかった1件を削除
+                await deleteDoc(targetDoc.ref);
                 alert(`${dateStr} の記録を1ポモ削除しました！`);
+                
+                // 削除後、カレンダーやランキングの表示を最新に更新する
+                loadCalendar();
+                loadRanking('today');
+                
             } catch(e) { 
                 console.error("削除エラー", e); 
                 alert("削除に失敗しました"); 
