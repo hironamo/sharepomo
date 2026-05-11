@@ -27,26 +27,21 @@
         .btn-main { background: var(--accent); color: black; }
         .btn-sub { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); }
         
-        /* タイマー表示 */
-        .status-label { letter-spacing: 0.3rem; opacity: 0.8; margin-bottom: 10px; text-transform: uppercase; font-size: 1.5rem; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5);}
-        .timer-display { font-size: clamp(4rem, 18vw, 10rem); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; margin: 5px 0; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .status-label { letter-spacing: 0.3rem; opacity: 0.8; margin-bottom: 10px; text-transform: uppercase; font-size: 1.5rem; font-weight: bold;}
+        .timer-display { font-size: clamp(4rem, 18vw, 10rem); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; margin: 5px 0; }
         
-        /* シークバー */
         .progress-container { width: 90%; max-width: 500px; margin: 15px 0; }
         input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--accent); height: 8px; border-radius: 4px; }
 
-        /* セッションドット */
         .dots-area { display: flex; gap: 12px; margin-bottom: 15px; }
         .dot-wrapper { cursor: pointer; padding: 5px; }
         .dot { width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: 0.3s; }
         .dot.active { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
 
-        /* 参加者一覧 */
         .participants-section { width: 100%; max-width: 500px; margin-top: 20px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px; border: 1px solid rgba(255,255,255,0.1);}
-        .participants-title { font-size: 0.8rem; opacity: 0.6; text-align: left; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;}
         .participants-list { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-        .user-chip { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.05); }
-        .user-chip img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: #444; }
+        .user-chip { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; }
+        .user-chip img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
 
         .room-badge { background: var(--accent); color: black; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-bottom: 10px;}
         .controls { display: flex; gap: 1rem; margin-top: 10px; }
@@ -60,18 +55,17 @@
 <body>
 
     <nav>
-        <div style="font-weight: bold; font-size: 1.1rem;">Focus Connect: Group</div>
+        <div style="font-weight: bold; font-size: 1.1rem;">Group Timer</div>
         <button onclick="leaveRoom()" style="background:none; border:none; color:white; cursor:pointer; opacity:0.8;">← 戻る</button>
     </nav>
 
     <div id="setup-view" class="view">
         <div class="card">
             <h2 style="margin-top:0;">みんなでポモ</h2>
-            <button class="btn btn-main" onclick="showInput('open')">部屋を開く (リーダー)</button>
+            <button class="btn btn-main" onclick="showInput('open')">部屋を開く</button>
             <button class="btn btn-sub" onclick="showInput('join')">部屋に入る</button>
-            
             <div id="input-area" style="display:none; margin-top:20px;">
-                <input type="number" id="room-code" placeholder="3桁の合言葉" maxlength="3">
+                <input type="number" id="room-code" placeholder="3桁の数字" maxlength="3">
                 <button id="action-btn" class="btn btn-main" onclick="processRoom()"></button>
             </div>
         </div>
@@ -80,39 +74,30 @@
     <div id="timer-view" class="view" style="display:none;">
         <div class="room-badge">合言葉: <span id="display-code"></span> <span id="leader-tag"></span></div>
         <div class="status-label" id="status-label">READY</div>
-        
         <div class="dots-area" id="dots-area">
             <div class="dot-wrapper" onclick="groupAction('setSet', 1)"><div class="dot active"></div></div>
             <div class="dot-wrapper" onclick="groupAction('setSet', 2)"><div class="dot"></div></div>
             <div class="dot-wrapper" onclick="groupAction('setSet', 3)"><div class="dot"></div></div>
             <div class="dot-wrapper" onclick="groupAction('setSet', 4)"><div class="dot"></div></div>
         </div>
-
         <div class="timer-display" id="timer-display">25:00</div>
-        
         <div class="progress-container">
             <input type="range" id="seek-bar" value="0" step="1" oninput="handleSeek(this.value)">
         </div>
-
         <div class="controls" id="leader-controls" style="display:none;">
             <button class="main-btn" onclick="groupAction('reset')">Reset</button>
             <button class="main-btn start-btn-style" id="start-btn" onclick="groupAction('toggle')">START</button>
         </div>
-        <div id="member-notice" style="margin-top:10px; opacity:0.6; font-size:0.85rem;">リーダーの操作を待っています...</div>
-
+        <div id="member-notice" style="margin-top:10px; opacity:0.6; font-size:0.85rem;">リーダーの操作を待機中...</div>
         <div class="participants-section">
-            <div class="participants-title">現在の参加者</div>
-            <div id="participants-list" class="participants-list">
-                </div>
+            <div id="participants-list" class="participants-list"></div>
         </div>
-        
-        <button onclick="leaveRoom()" style="margin-top:30px; background:none; border:none; color:#ff6b6b; cursor:pointer; font-size:0.8rem; opacity:0.7;">部屋を退出する</button>
+        <button onclick="leaveRoom()" style="margin-top:30px; background:none; border:none; color:#ff6b6b; cursor:pointer; font-size:0.8rem; opacity:0.7;">部屋を退出</button>
     </div>
 
     <div id="long-break-modal" class="modal">
         <div class="modal-content">
-            <h2 style="margin-top:0;">☕ Long Break</h2>
-            <p>休憩時間を選択してください（リーダーのみ）</p>
+            <h2>☕ Long Break</h2>
             <div style="display:flex; gap:10px;">
                 <button class="btn btn-main" onclick="groupAction('longBreak', 15)">15分</button>
                 <button class="btn btn-main" onclick="groupAction('longBreak', 30)">30分</button>
@@ -124,7 +109,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, deleteDoc, serverTimestamp, collection, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, deleteDoc, serverTimestamp, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCZh4ME9QimEx62f7SLc4F3lyorTzml_hY",
@@ -140,25 +125,19 @@
         const db = getFirestore(app);
 
         let currentUser = null;
-        let userData = { displayName: "Guest", photoURL: "" };
+        let userData = { displayName: "Guest" };
         let currentRoomId = null;
         let isLeader = false;
-        let unsubRoom = null;
-        let unsubParticipants = null;
         let localTimerId = null;
         let alarmAudio = new Audio();
-        let lastLoggedSession = null;
+        let sessionFinished = false; // 重複記録防止フラグ
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) { location.href = 'index.html'; return; }
             currentUser = user;
             const snap = await getDoc(doc(db, "users", user.uid));
-            if(snap.exists()) {
-                userData = snap.data();
-            } else {
-                userData.displayName = user.displayName || user.email.split('@')[0];
-                userData.photoURL = user.photoURL || "";
-            }
+            if(snap.exists()) userData = snap.data();
+            else userData.displayName = user.displayName || user.email.split('@')[0];
         });
 
         window.showInput = (mode) => {
@@ -171,38 +150,21 @@
             const code = document.getElementById('room-code').value;
             if(code.length !== 3) return alert("3桁の数字を入力してください");
             
-            // 音声の「ロック解除」（ユーザー操作直後に行う必要がある）
+            // 音声ロック解除
             alarmAudio.play().then(() => { alarmAudio.pause(); alarmAudio.currentTime = 0; }).catch(() => {});
 
             currentRoomId = code;
             if(window.currentMode === 'open') {
                 isLeader = true;
                 await setDoc(doc(db, "rooms", code), {
-                    leaderUid: currentUser.uid,
-                    status: 'idle', mode: 'work', sessions: 1,
+                    leaderUid: currentUser.uid, status: 'idle', mode: 'work', sessions: 1,
                     timeLeft: 25 * 60, duration: 25 * 60, startTime: null,
-                    settings: {
-                        bgType: userData.bgType || 'color',
-                        bgImageUrl: userData.bgImageUrl || null,
-                        bgWork: userData.bgWork || '#0f172a',
-                        bgBreak: userData.bgBreak || '#064e3b',
-                        bgLong: '#1e3a8a',
-                        alarmUrl: userData.alarmUrl || null
-                    }
+                    settings: { bgType: userData.bgType || 'color', bgImageUrl: userData.bgImageUrl || null, bgWork: userData.bgWork || '#0f172a', bgBreak: userData.bgBreak || '#064e3b', bgLong: '#1e3a8a', alarmUrl: userData.alarmUrl || null }
                 });
-            } else {
-                const snap = await getDoc(doc(db, "rooms", code));
-                if(!snap.exists()) return alert("部屋が見つかりません");
-                isLeader = false;
             }
-            
-            // 参加者として登録
             await setDoc(doc(db, `rooms/${code}/participants`, currentUser.uid), {
-                name: userData.displayName || "Guest",
-                photo: userData.photoURL || "https://via.placeholder.com/24",
-                joinedAt: serverTimestamp()
+                name: userData.displayName || "Guest", photo: currentUser.photoURL || "https://via.placeholder.com/24", joinedAt: serverTimestamp()
             });
-
             startSync();
         };
 
@@ -214,42 +176,32 @@
             document.getElementById('leader-controls').style.display = isLeader ? 'flex' : 'none';
             document.getElementById('member-notice').style.display = isLeader ? 'none' : 'block';
 
-            // ルーム情報の同期
-            unsubRoom = onSnapshot(doc(db, "rooms", currentRoomId), (snap) => {
-                if(!snap.exists()) { alert("部屋が解散されました"); leaveRoom(); return; }
-                renderUI(snap.data());
+            onSnapshot(doc(db, "rooms", currentRoomId), (snap) => {
+                if(!snap.exists()) { alert("部屋が解散されました"); location.href = 'index.html'; return; }
+                const data = snap.data();
+                renderUI(data);
             });
 
-            // 参加者一覧の同期
-            unsubParticipants = onSnapshot(collection(db, `rooms/${currentRoomId}/participants`), (snap) => {
+            onSnapshot(collection(db, `rooms/${currentRoomId}/participants`), (snap) => {
                 const list = document.getElementById('participants-list');
                 list.innerHTML = "";
                 snap.forEach(doc => {
                     const p = doc.data();
-                    const chip = document.createElement('div');
-                    chip.className = 'user-chip';
-                    chip.innerHTML = `<img src="${p.photo}" onerror="this.src='https://via.placeholder.com/24'">${p.name}`;
-                    list.appendChild(chip);
+                    list.innerHTML += `<div class="user-chip"><img src="${p.photo}" onerror="this.src='https://via.placeholder.com/24'">${p.name}</div>`;
                 });
             });
         }
 
         function renderUI(data) {
             const s = data.settings;
-            // 背景
-            if(s.bgType === 'image' && s.bgImageUrl) {
-                document.body.style.backgroundImage = `url(${s.bgImageUrl})`;
-            } else {
+            if(s.bgType === 'image' && s.bgImageUrl) document.body.style.backgroundImage = `url(${s.bgImageUrl})`;
+            else {
                 document.body.style.backgroundImage = 'none';
-                let bgColor = s.bgWork;
-                if(data.mode === 'break') bgColor = s.bgBreak;
-                if(data.mode === 'long-break') bgColor = s.bgLong;
-                document.body.style.backgroundColor = bgColor;
+                document.body.style.backgroundColor = data.mode === 'work' ? s.bgWork : (data.mode === 'break' ? s.bgBreak : s.bgLong);
             }
-            // アラーム準備
             if(s.alarmUrl && alarmAudio.src !== s.alarmUrl) alarmAudio.src = s.alarmUrl;
-
-            document.getElementById('status-label').innerText = data.mode.replace('-', ' ').toUpperCase();
+            document.getElementById('status-label').innerText = data.mode.toUpperCase();
+            
             const dots = document.getElementById('dots-area').children;
             for(let i=0; i<4; i++) dots[i].firstElementChild.className = i < data.sessions ? "dot active" : "dot";
 
@@ -258,16 +210,17 @@
             seekBar.disabled = !isLeader;
 
             if(localTimerId) clearInterval(localTimerId);
-
             if(data.status === 'running') {
                 document.getElementById('start-btn').innerText = "PAUSE";
+                sessionFinished = false; // 実行中になったら終了フラグをリセット
                 localTimerId = setInterval(() => {
-                    const now = Date.now();
-                    const start = data.startTime.toDate().getTime();
-                    const elapsed = Math.floor((now - start) / 1000);
+                    const elapsed = Math.floor((Date.now() - data.startTime.toDate().getTime()) / 1000);
                     const remain = Math.max(0, data.timeLeft - elapsed);
                     updateTimerDisplay(remain, data.duration);
-                    if(remain <= 0 && isLeader) finishSession(data);
+                    if(remain <= 0 && !sessionFinished) {
+                        sessionFinished = true;
+                        finishSession(data);
+                    }
                 }, 500);
             } else {
                 document.getElementById('start-btn').innerText = "START";
@@ -280,50 +233,21 @@
             const s = (remain % 60).toString().padStart(2, '0');
             document.getElementById('timer-display').innerText = `${m}:${s}`;
             document.getElementById('seek-bar').value = total - remain;
-            document.title = `[${m}:${s}] みんなでポモ`;
+            document.title = `[${m}:${s}] Group Pomodoro`;
         }
 
-        window.groupAction = async (type, val) => {
-            if(!isLeader) return;
-            const ref = doc(db, "rooms", currentRoomId);
-            const snap = await getDoc(ref);
-            const data = snap.data();
-
-            if(type === 'toggle') {
-                if(data.status === 'running') {
-                    const elapsed = Math.floor((Date.now() - data.startTime.toDate().getTime()) / 1000);
-                    await updateDoc(ref, { status: 'idle', timeLeft: Math.max(0, data.timeLeft - elapsed), startTime: null });
-                } else {
-                    await updateDoc(ref, { status: 'running', startTime: serverTimestamp() });
-                }
-            } else if(type === 'reset') {
-                await updateDoc(ref, { status: 'idle', timeLeft: 25*60, duration: 25*60, mode: 'work', sessions: 1, startTime: null });
-            } else if(type === 'setSet') {
-                await updateDoc(ref, { sessions: val, timeLeft: 25*60, duration: 25*60, mode: 'work', status: 'idle', startTime: null });
-            } else if(type === 'longBreak') {
-                document.getElementById('long-break-modal').style.display = 'none';
-                await updateDoc(ref, { mode: 'long-break', duration: val*60, timeLeft: val*60, status: 'running', startTime: serverTimestamp(), sessions: 1 });
-            }
-        };
-
-        window.handleSeek = async (val) => {
-            if(!isLeader) return;
-            const ref = doc(db, "rooms", currentRoomId);
-            const snap = await getDoc(ref);
-            const data = snap.data();
-            const newRemain = data.duration - parseInt(val);
-            if(data.status === 'running') {
-                await updateDoc(ref, { timeLeft: newRemain, startTime: serverTimestamp() });
-            } else {
-                await updateDoc(ref, { timeLeft: newRemain });
-            }
-        };
-
         async function finishSession(data) {
-            clearInterval(localTimerId);
-            if(alarmAudio.src) alarmAudio.play().catch(e => console.log("再生失敗:", e));
-
-            if(data.mode === 'work') savePomoRecordToAccount();
+            if(alarmAudio.src) alarmAudio.play().catch(() => {});
+            
+            // 全員が自分のアカウントに記録する
+            if(data.mode === 'work') {
+                await addDoc(collection(db, "pomodoros"), {
+                    uid: currentUser.uid,
+                    userName: userData.displayName || "Guest", // index.htmlのランキング形式に合わせる
+                    timestamp: serverTimestamp(),
+                    mode: 'group'
+                });
+            }
 
             if(!isLeader) return;
             const ref = doc(db, "rooms", currentRoomId);
@@ -340,44 +264,41 @@
             }
         }
 
-        async function savePomoRecordToAccount() {
-            if(!currentUser) return;
-            const now = Math.floor(Date.now() / 10000); 
-            if(lastLoggedSession === now) return;
-            lastLoggedSession = now;
+        window.groupAction = async (type, val) => {
+            if(!isLeader) return;
+            const ref = doc(db, "rooms", currentRoomId);
+            const snap = await getDoc(ref);
+            const data = snap.data();
+            if(type === 'toggle') {
+                if(data.status === 'running') {
+                    const elapsed = Math.floor((Date.now() - data.startTime.toDate().getTime()) / 1000);
+                    await updateDoc(ref, { status: 'idle', timeLeft: Math.max(0, data.timeLeft - elapsed), startTime: null });
+                } else await updateDoc(ref, { status: 'running', startTime: serverTimestamp() });
+            } else if(type === 'reset') await updateDoc(ref, { status: 'idle', timeLeft: 25*60, duration: 25*60, mode: 'work', sessions: 1, startTime: null });
+            else if(type === 'setSet') await updateDoc(ref, { sessions: val, timeLeft: 25*60, duration: 25*60, mode: 'work', status: 'idle', startTime: null });
+            else if(type === 'longBreak') {
+                document.getElementById('long-break-modal').style.display = 'none';
+                await updateDoc(ref, { mode: 'long-break', duration: val*60, timeLeft: val*60, status: 'running', startTime: serverTimestamp(), sessions: 1 });
+            }
+        };
 
-            try {
-                // index.htmlの履歴機能で使っている形式に合わせる
-                await setDoc(doc(collection(db, "pomodoros")), {
-                    uid: currentUser.uid,
-                    timestamp: serverTimestamp(),
-                    mode: 'group',
-                    room: currentRoomId
-                });
-            } catch(e) { console.error("記録エラー:", e); }
-        }
+        window.handleSeek = async (val) => {
+            if(!isLeader) return;
+            const ref = doc(db, "rooms", currentRoomId);
+            const snap = await getDoc(ref);
+            const data = snap.data();
+            const newRemain = data.duration - parseInt(val);
+            if(data.status === 'running') await updateDoc(ref, { timeLeft: newRemain, startTime: serverTimestamp() });
+            else await updateDoc(ref, { timeLeft: newRemain });
+        };
 
         window.leaveRoom = async () => {
             if(currentRoomId && currentUser) {
-                // 参加者リストから自分を消す
                 await deleteDoc(doc(db, `rooms/${currentRoomId}/participants`, currentUser.uid));
-                if(isLeader) {
-                    if(confirm("あなたが退出すると部屋は解散されます。よろしいですか？")) {
-                        await deleteDoc(doc(db, "rooms", currentRoomId));
-                    }
-                }
+                if(isLeader) await deleteDoc(doc(db, "rooms", currentRoomId));
             }
             location.href = 'index.html';
         };
-
-        // タブを閉じるときの自動退出
-        window.addEventListener('beforeunload', () => {
-            if(currentRoomId && currentUser) {
-                // 同期的な削除は難しいためFirestoreの機能に頼る形になりますが、
-                // 実装としては上記のleaveRoomを呼ぶのがベストです。
-                deleteDoc(doc(db, `rooms/${currentRoomId}/participants`, currentUser.uid));
-            }
-        });
     </script>
 </body>
 </html>
