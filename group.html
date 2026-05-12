@@ -21,11 +21,10 @@
             z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.1);
             position: fixed; top: 0; left: 0; right: 0; height: 50px;
         }
-        /* メインビューの余白を調整して被りを防止 */
         .view { 
             display: flex; flex-direction: column; align-items: center; 
             justify-content: flex-start; flex: 1; 
-            padding: 80px 20px 20px 20px; /* 上部に80pxの余白を確保 */
+            padding: 80px 20px 20px 20px;
             text-align: center; overflow-y: auto; 
         }
         .card { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 30px; border-radius: 12px; width: 100%; max-width: 350px; border: 1px solid rgba(255,255,255,0.1); margin-top: 40px;}
@@ -137,27 +136,40 @@
         const db = getFirestore(app);
 
         let currentUser = null;
-        let userData = { userName: "ゲスト", photoURL: "" };
+        // ★修正: index.htmlで保存される displayName を使用
+        let userData = { displayName: "ゲスト", photoURL: "" };
         let currentRoomId = null;
         let isLeader = false;
         let localTimerId = null;
         let alarmAudio = new Audio();
         let sessionFinished = false; 
 
+        // 画面のどこかをタッチ・クリックした時に音声をアンロック（iOS/Safari対策）
+        function unlockAudio() {
+            alarmAudio.play().then(() => {
+                alarmAudio.pause();
+                alarmAudio.currentTime = 0;
+            }).catch(() => {});
+        }
+        document.addEventListener('touchstart', unlockAudio, { once: true });
+        document.addEventListener('click', unlockAudio, { once: true });
+
         // 1. ユーザー情報と設定アイコンを確実に取得
         onAuthStateChanged(auth, async (user) => {
             if (!user) { location.href = 'index.html'; return; }
             currentUser = user;
+            
+            // データベースからユーザー設定を読み込み
             const userSnap = await getDoc(doc(db, "users", user.uid));
             if(userSnap.exists()) {
                 const data = userSnap.data();
                 userData = {
-                    userName: data.userName || user.displayName || "ゲスト",
-                    photoURL: data.photoURL || user.photoURL || ""
+                    displayName: data.displayName || user.displayName || "ゲスト",
+                    photoURL: data.photoURL || user.photoURL || "https://via.placeholder.com/32"
                 };
             } else {
-                userData.userName = user.displayName || "ゲスト";
-                userData.photoURL = user.photoURL || "";
+                userData.displayName = user.displayName || "ゲスト";
+                userData.photoURL = user.photoURL || "https://via.placeholder.com/32";
             }
         });
 
@@ -170,8 +182,6 @@
         window.processRoom = async () => {
             const code = document.getElementById('room-code').value;
             if(code.length !== 3) return alert("3桁の数字を入力してください");
-            
-            alarmAudio.play().then(() => { alarmAudio.pause(); alarmAudio.currentTime = 0; }).catch(() => {});
 
             currentRoomId = code;
             if(window.currentMode === 'open') {
@@ -188,7 +198,7 @@
 
             // 参加者リストに「設定済みのアイコンと名前」を登録
             await setDoc(doc(db, `rooms/${code}/participants`, currentUser.uid), {
-                name: userData.userName,
+                name: userData.displayName, // ★修正: 正しい名前を登録
                 photo: userData.photoURL,
                 joinedAt: serverTimestamp()
             });
@@ -204,18 +214,20 @@
             document.getElementById('leader-controls').style.display = isLeader ? 'flex' : 'none';
             document.getElementById('member-notice').style.display = isLeader ? 'none' : 'block';
 
+            // ルームのタイマー情報を同期
             onSnapshot(doc(db, "rooms", currentRoomId), (snap) => {
                 if(!snap.exists()) { alert("部屋が解散されました"); location.href = 'index.html'; return; }
                 renderUI(snap.data());
             });
 
+            // 参加者リストを同期
             onSnapshot(collection(db, `rooms/${currentRoomId}/participants`), (snap) => {
                 const list = document.getElementById('participants-list');
                 list.innerHTML = "";
                 snap.forEach(doc => {
                     const p = doc.data();
-                    const photo = p.photo || 'https://www.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png';
-                    list.innerHTML += `<div class="user-chip"><img src="${photo}">${p.name}</div>`;
+                    const photo = p.photo || 'https://via.placeholder.com/32';
+                    list.innerHTML += `<div class="user-chip"><img src="${photo}" onerror="this.src='https://via.placeholder.com/32'">${p.name}</div>`;
                 });
             });
         }
@@ -224,6 +236,12 @@
             const s = data.settings;
             document.body.style.backgroundColor = data.mode === 'work' ? s.bgWork : (data.mode === 'break' ? s.bgBreak : s.bgLong);
             
+            // アラーム音の設定
+            if(s.alarmUrl && alarmAudio.src !== s.alarmUrl) {
+                alarmAudio.src = s.alarmUrl;
+                alarmAudio.load();
+            }
+
             document.getElementById('status-label').innerText = data.mode.toUpperCase();
             const dots = document.querySelectorAll('.dot');
             dots.forEach((d, i) => d.className = i < data.sessions ? "dot active" : "dot");
@@ -263,13 +281,18 @@
         }
 
         async function handleFinish(data) {
-            if(alarmAudio.src) alarmAudio.play().catch(() => {});
+            // アラーム再生
+            if(alarmAudio.src) {
+                alarmAudio.currentTime = 0;
+                alarmAudio.play().catch(e => console.error("音声再生エラー:", e));
+            }
             
-            // 全員が自分の名前(userName)で記録
+            // 全員が自分の名前(displayName)とアイコン(photoURL)で記録
             if(data.mode === 'work') {
                 await addDoc(collection(db, "pomodoros"), {
                     uid: currentUser.uid,
-                    userName: userData.userName, // index.htmlと一致
+                    displayName: userData.displayName, // ★修正: index.htmlのランキング等と一致
+                    photoURL: userData.photoURL || "https://via.placeholder.com/32",
                     timestamp: serverTimestamp(),
                     mode: 'group'
                 });
