@@ -31,6 +31,7 @@
         input[type="number"] { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; font-size: 1.1rem; text-align: center;}
         .btn { width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s;}
         .btn-main { background: var(--accent); color: #000; }
+        .btn-main:disabled { background: #555; cursor: not-allowed; }
         .btn-sub { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); }
         
         .room-badge { background: var(--accent); color: #000; padding: 6px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);}
@@ -66,8 +67,8 @@
     <div id="setup-view" class="view">
         <div class="card">
             <h2 style="margin-top:0;">みんなでポモ</h2>
-            <button class="btn btn-main" onclick="showInput('open')">新しく部屋を作る</button>
-            <button class="btn btn-sub" onclick="showInput('join')">既存の部屋に入る</button>
+            <button class="btn btn-main" id="btn-create" onclick="showInput('open')" disabled>準備中...</button>
+            <button class="btn btn-sub" id="btn-join" onclick="showInput('join')" disabled>準備中...</button>
             <div id="input-area" style="display:none; margin-top:20px;">
                 <input type="number" id="room-code" placeholder="3桁の合言葉" maxlength="3">
                 <button id="action-btn" class="btn btn-main" onclick="processRoom()"></button>
@@ -136,41 +137,40 @@
         const db = getFirestore(app);
 
         let currentUser = null;
-        // ★修正: index.htmlで保存される displayName を使用
         let userData = { displayName: "ゲスト", photoURL: "" };
         let currentRoomId = null;
         let isLeader = false;
         let localTimerId = null;
         let alarmAudio = new Audio();
-        let sessionFinished = false; 
+        let currentSessionStartTime = null; // 現在のセッション開始時刻（記録重複防止用）
+        let isProcessingFinish = false;
 
-        // 画面のどこかをタッチ・クリックした時に音声をアンロック（iOS/Safari対策）
+        // 音声アンロック
         function unlockAudio() {
-            alarmAudio.play().then(() => {
-                alarmAudio.pause();
-                alarmAudio.currentTime = 0;
-            }).catch(() => {});
+            alarmAudio.play().then(() => { alarmAudio.pause(); alarmAudio.currentTime = 0; }).catch(() => {});
         }
         document.addEventListener('touchstart', unlockAudio, { once: true });
         document.addEventListener('click', unlockAudio, { once: true });
 
-        // 1. ユーザー情報と設定アイコンを確実に取得
         onAuthStateChanged(auth, async (user) => {
             if (!user) { location.href = 'index.html'; return; }
             currentUser = user;
             
-            // データベースからユーザー設定を読み込み
             const userSnap = await getDoc(doc(db, "users", user.uid));
             if(userSnap.exists()) {
                 const data = userSnap.data();
-                userData = {
-                    displayName: data.displayName || user.displayName || "ゲスト",
-                    photoURL: data.photoURL || user.photoURL || "https://via.placeholder.com/32"
-                };
+                userData.displayName = data.displayName || user.displayName || "ゲスト";
+                userData.photoURL = data.photoURL || user.photoURL || "";
             } else {
                 userData.displayName = user.displayName || "ゲスト";
-                userData.photoURL = user.photoURL || "https://via.placeholder.com/32";
+                userData.photoURL = user.photoURL || "";
             }
+            
+            // データ取得完了後にボタンを有効化
+            document.getElementById('btn-create').innerText = "新しく部屋を作る";
+            document.getElementById('btn-create').disabled = false;
+            document.getElementById('btn-join').innerText = "既存の部屋に入る";
+            document.getElementById('btn-join').disabled = false;
         });
 
         window.showInput = (mode) => {
@@ -196,9 +196,9 @@
                 });
             }
 
-            // 参加者リストに「設定済みのアイコンと名前」を登録
+            // 参加者として登録
             await setDoc(doc(db, `rooms/${code}/participants`, currentUser.uid), {
-                name: userData.displayName, // ★修正: 正しい名前を登録
+                name: userData.displayName,
                 photo: userData.photoURL,
                 joinedAt: serverTimestamp()
             });
@@ -214,29 +214,71 @@
             document.getElementById('leader-controls').style.display = isLeader ? 'flex' : 'none';
             document.getElementById('member-notice').style.display = isLeader ? 'none' : 'block';
 
-            // ルームのタイマー情報を同期
             onSnapshot(doc(db, "rooms", currentRoomId), (snap) => {
                 if(!snap.exists()) { alert("部屋が解散されました"); location.href = 'index.html'; return; }
-                renderUI(snap.data());
+                const data = snap.data();
+                
+                // 記録処理のロジック改善
+                // 前回のセッション開始時間と今の開始時間が異なり、かつ前のモードがworkだった場合に記録
+                handleSessionSync(data);
+                
+                renderUI(data);
             });
 
-            // 参加者リストを同期
             onSnapshot(collection(db, `rooms/${currentRoomId}/participants`), (snap) => {
                 const list = document.getElementById('participants-list');
                 list.innerHTML = "";
                 snap.forEach(doc => {
                     const p = doc.data();
-                    const photo = p.photo || 'https://via.placeholder.com/32';
-                    list.innerHTML += `<div class="user-chip"><img src="${photo}" onerror="this.src='https://via.placeholder.com/32'">${p.name}</div>`;
+                    const photo = p.photo || 'https://www.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png';
+                    list.innerHTML += `<div class="user-chip"><img src="${photo}">${p.name}</div>`;
                 });
             });
+        }
+
+        // 全参加者共通の「終了検知・記録」ロジック
+        async function handleSessionSync(data) {
+            const dbStartTime = data.startTime ? data.startTime.toDate().getTime() : null;
+            
+            // 作業セッション開始を検知
+            if (data.mode === 'work' && data.status === 'running') {
+                if (currentSessionStartTime !== dbStartTime) {
+                    currentSessionStartTime = dbStartTime;
+                    isProcessingFinish = false;
+                }
+            }
+
+            // 作業終了を検知（モードが切り替わった、またはタイマーが止まった）
+            if (data.mode !== 'work' || data.status !== 'running') {
+                if (currentSessionStartTime && !isProcessingFinish) {
+                    isProcessingFinish = true;
+                    await saveWorkRecord();
+                    currentSessionStartTime = null; // 記録済みとしてリセット
+                }
+            }
+        }
+
+        async function saveWorkRecord() {
+            if (alarmAudio.src) {
+                alarmAudio.currentTime = 0;
+                alarmAudio.play().catch(() => {});
+            }
+
+            // データベースに記録
+            await addDoc(collection(db, "pomodoros"), {
+                uid: currentUser.uid,
+                displayName: userData.displayName,
+                photoURL: userData.photoURL || "",
+                timestamp: serverTimestamp(),
+                mode: 'group'
+            });
+            console.log("作業記録を保存しました");
         }
 
         function renderUI(data) {
             const s = data.settings;
             document.body.style.backgroundColor = data.mode === 'work' ? s.bgWork : (data.mode === 'break' ? s.bgBreak : s.bgLong);
             
-            // アラーム音の設定
             if(s.alarmUrl && alarmAudio.src !== s.alarmUrl) {
                 alarmAudio.src = s.alarmUrl;
                 alarmAudio.load();
@@ -251,18 +293,18 @@
             seekBar.disabled = !isLeader;
 
             if(localTimerId) clearInterval(localTimerId);
+            
             if(data.status === 'running') {
                 document.getElementById('start-btn').innerText = "一時停止";
-                sessionFinished = false; 
                 localTimerId = setInterval(() => {
                     const elapsed = Math.floor((Date.now() - data.startTime.toDate().getTime()) / 1000);
                     const remain = Math.max(0, data.timeLeft - elapsed);
                     updateTimerDisplay(remain, data.duration);
                     
-                    // 全員のブラウザで「残り0秒」を検知して記録
-                    if(remain <= 0 && !sessionFinished) {
-                        sessionFinished = true;
-                        handleFinish(data);
+                    // リーダーのみがタイマー終了時にDBを更新する責務を持つ
+                    if(isLeader && remain <= 0) {
+                        clearInterval(localTimerId);
+                        handleLeaderFinish(data);
                     }
                 }, 500);
             } else {
@@ -280,25 +322,8 @@
             document.title = `[${m}:${s}] みんなでポモ`;
         }
 
-        async function handleFinish(data) {
-            // アラーム再生
-            if(alarmAudio.src) {
-                alarmAudio.currentTime = 0;
-                alarmAudio.play().catch(e => console.error("音声再生エラー:", e));
-            }
-            
-            // 全員が自分の名前(displayName)とアイコン(photoURL)で記録
-            if(data.mode === 'work') {
-                await addDoc(collection(db, "pomodoros"), {
-                    uid: currentUser.uid,
-                    displayName: userData.displayName, // ★修正: index.htmlのランキング等と一致
-                    photoURL: userData.photoURL || "https://via.placeholder.com/32",
-                    timestamp: serverTimestamp(),
-                    mode: 'group'
-                });
-            }
-
-            if(!isLeader) return;
+        // リーダー専用：次のモードへ切り替える処理
+        async function handleLeaderFinish(data) {
             const ref = doc(db, "rooms", currentRoomId);
             if(data.mode === 'work') {
                 if(data.sessions >= 4) {
@@ -318,14 +343,17 @@
             const ref = doc(db, "rooms", currentRoomId);
             const snap = await getDoc(ref);
             const data = snap.data();
+            
             if(type === 'toggle') {
                 if(data.status === 'running') {
                     const elapsed = Math.floor((Date.now() - data.startTime.toDate().getTime()) / 1000);
                     await updateDoc(ref, { status: 'idle', timeLeft: Math.max(0, data.timeLeft - elapsed), startTime: null });
                 } else await updateDoc(ref, { status: 'running', startTime: serverTimestamp() });
-            } else if(type === 'reset') await updateDoc(ref, { status: 'idle', timeLeft: 25*60, duration: 25*60, mode: 'work', sessions: 1, startTime: null });
-            else if(type === 'setSet') await updateDoc(ref, { sessions: val, timeLeft: 25*60, duration: 25*60, mode: 'work', status: 'idle', startTime: null });
-            else if(type === 'longBreak') {
+            } else if(type === 'reset') {
+                await updateDoc(ref, { status: 'idle', timeLeft: 25*60, duration: 25*60, mode: 'work', sessions: 1, startTime: null });
+            } else if(type === 'setSet') {
+                await updateDoc(ref, { sessions: val, timeLeft: 25*60, duration: 25*60, mode: 'work', status: 'idle', startTime: null });
+            } else if(type === 'longBreak') {
                 await updateDoc(ref, { mode: 'long-break', duration: val*60, timeLeft: val*60, status: 'running', startTime: serverTimestamp(), sessions: 1 });
             }
         };
