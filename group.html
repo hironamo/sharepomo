@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>みんなでポモ - Focus Connect Pro</title>
+    <style>
+        :root {
+            --bg-work: #0f172a; --bg-break: #064e3b; --bg-long: #1e3a8a;
+            --accent: #38bdf8; --text: #f8fafc; --nav-bg: rgba(0,0,0,0.8);
+        }
+        body {
+            margin: 0; display: flex; flex-direction: column; height: 100vh; 
+            background-color: var(--bg-work); color: var(--text);
+            font-family: -apple-system, sans-serif; transition: background-color 0.8s; 
+            overflow: hidden; background-size: cover; background-position: center; background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+        nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 20px; background: var(--nav-bg); backdrop-filter: blur(10px);
+            z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: fixed; top: 0; left: 0; right: 0; height: 50px;
+        }
+        .view { 
+            display: flex; flex-direction: column; align-items: center; 
+            justify-content: flex-start; flex: 1; 
+            padding: 80px 20px 20px 20px;
+            text-align: center; overflow-y: auto; 
+        }
+        .card { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 30px; border-radius: 12px; width: 100%; max-width: 350px; border: 1px solid rgba(255,255,255,0.1); margin-top: 40px;}
+        input[type="number"] { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; font-size: 1.1rem; text-align: center;}
+        .btn { width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s;}
+        .btn-main { background: var(--accent); color: #000; }
+        .btn-main:disabled { background: #555; cursor: not-allowed; }
+        .btn-sub { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); }
+        
+        .room-badge { background: var(--accent); color: #000; padding: 6px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);}
+        .status-label { letter-spacing: 0.3rem; opacity: 0.8; margin-bottom: 5px; text-transform: uppercase; font-size: 1.2rem; font-weight: bold;}
+        .timer-display { font-size: clamp(4.5rem, 18vw, 9rem); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; margin: 10px 0; }
+        
+        .progress-container { width: 90%; max-width: 450px; margin: 20px 0; }
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--accent); height: 8px; border-radius: 4px; }
+
+        .dots-area { display: flex; gap: 15px; margin-bottom: 20px; }
+        .dot { width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: 0.3s; cursor: pointer; }
+        .dot.active { background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+
+        .participants-section { width: 100%; max-width: 450px; margin-top: 30px; background: rgba(0,0,0,0.3); border-radius: 15px; padding: 15px; border: 1px solid rgba(255,255,255,0.1);}
+        .participants-list { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+        .user-chip { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); padding: 6px 14px; border-radius: 25px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.05); }
+        .user-chip img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: #333; }
+
+        .controls { display: flex; gap: 1rem; margin-top: 15px; }
+        .main-btn { padding: 0.8rem 2.2rem; font-size: 1.1rem; border-radius: 50px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; font-weight: bold; }
+        .start-btn-style { background: var(--text); color: #000; min-width: 150px; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); flex-direction: column; align-items: center; justify-content: center; z-index: 2000; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div style="font-weight: bold; font-size: 1.1rem;">Group Timer</div>
+        <button onclick="leaveRoom()" style="background:none; border:none; color:white; cursor:pointer; opacity:0.8;">ルーム退出</button>
+    </nav>
+
+    <div id="setup-view" class="view">
+        <div class="card">
+            <h2 style="margin-top:0;">みんなでポモ</h2>
+            <button class="btn btn-main" id="btn-create" onclick="showInput('open')" disabled>読み込み中...</button>
+            <button class="btn btn-sub" id="btn-join" onclick="showInput('join')" disabled>読み込み中...</button>
+            <div id="input-area" style="display:none; margin-top:20px;">
+                <input type="number" id="room-code" placeholder="3桁の合言葉" maxlength="3">
+                <button id="action-btn" class="btn btn-main" onclick="processRoom()"></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="timer-view" class="view" style="display:none;">
+        <div class="room-badge">合言葉: <span id="display-code"></span> <span id="leader-tag"></span></div>
+        <div class="status-label" id="status-label">READY</div>
+        
+        <div class="dots-area" id="dots-area">
+            <div class="dot active" onclick="groupAction('setSet', 1)"></div>
+            <div class="dot" onclick="groupAction('setSet', 2)"></div>
+            <div class="dot" onclick="groupAction('setSet', 3)"></div>
+            <div class="dot" onclick="groupAction('setSet', 4)"></div>
+        </div>
+
+        <div class="timer-display" id="timer-display">25:00</div>
+        
+        <div class="progress-container">
+            <input type="range" id="seek-bar" value="0" step="1" oninput="handleSeek(this.value)">
+        </div>
+
+        <div class="controls" id="leader-controls" style="display:none;">
+            <button class="main-btn" onclick="groupAction('reset')">リセット</button>
+            <button class="main-btn start-btn-style" id="start-btn" onclick="groupAction('toggle')">START</button>
+        </div>
+        <div id="member-notice" style="margin-top:10px; opacity:0.6; font-size:0.85rem;">リーダーが開始するのを待っています...</div>
+
+        <div class="participants-section">
+            <div style="font-size: 0.75rem; opacity: 0.5; margin-bottom: 10px; text-align: left;">参加中のメンバー</div>
+            <div id="participants-list" class="participants-list"></div>
+        </div>
+    </div>
+
+    <div id="long-break-modal" class="modal">
+        <div style="text-align: center; background: #1e3a8a; padding: 40px; border-radius: 20px; border: 1px solid var(--accent);">
+            <h2>☕ 4セット完了！</h2>
+            <p>長い休憩の時間を選んでください（リーダー専用）</p>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-main" onclick="groupAction('longBreak', 15)">15分</button>
+                <button class="btn btn-main" onclick="groupAction('longBreak', 30)">30分</button>
+                <button class="btn btn-main" onclick="groupAction('longBreak', 60)">60分</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, deleteDoc, serverTimestamp, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZh4ME9QimEx62f7SLc4F3lyorTzml_hY",
+            authDomain: "sharetimer-fd215.firebaseapp.com",
+            projectId: "sharetimer-fd215",
+            storageBucket: "sharetimer-fd215.firebasestorage.app",
+            messagingSenderId: "862201995112",
+            appId: "1:862201995112:web:2b1b8d6a5cb74eb5d440dd"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let userData = { displayName: "ゲスト", photoURL: "" };
+        let currentRoomId = null;
+        let isLeader = false;
+        let localTimerId = null;
+        let alarmAudio = new Audio();
+        let currentSessionStartTime = null;
+        let isProcessingFinish = false;
+
+        // 【改善】アラーム音の事前アンロック（iOS対策）
+        function unlockAudio() {
+            alarmAudio.play().then(() => { alarmAudio.pause(); alarmAudio.currentTime = 0; }).catch(() => {});
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { location.href = 'index.html'; return; }
+            currentUser = user;
+            const userSnap = await getDoc(doc(db, "users", user.uid));
+            if(userSnap.exists()) {
+                const data = userSnap.data();
+                userData.displayName = data.displayName || user.displayName || "ゲスト";
+                userData.photoURL = data.photoURL || user.photoURL || "";
+            }
+            document.querySelectorAll('#btn-create, #btn-join').forEach(b => {
+                b.disabled = false;
+                b.innerText = b.id === 'btn-create' ? "新しく部屋を作る" : "既存の部屋に入る";
+            });
+        });
+
+        window.showInput = (mode) => {
+            document.getElementById('input-area').style.display = 'block';
+            document.getElementById('action-btn').innerText = mode === 'open' ? '作成して入室' : 'この合言葉で入室';
+            window.currentMode = mode;
+            unlockAudio(); // 入力エリア表示のタイミングで音声をアンロック
+        };
+
+        window.processRoom = async () => {
+            const code = document.getElementById('room-code').value;
+            if(code.length !== 3) return alert("3桁の数字を入力してください");
+            currentRoomId = code;
+
+            if(window.currentMode === 'open') {
+                isLeader = true;
+                // index.htmlからリーダーの設定を反映させるために既存の設定を取得（もしあれば）
+                const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+                const userSettings = userSnap.exists() ? userSnap.data().settings || {} : {};
+
+                await setDoc(doc(db, "rooms", code), {
+                    leaderUid: currentUser.uid, status: 'idle', mode: 'work', sessions: 1,
+                    timeLeft: 25 * 60, duration: 25 * 60, startTime: null,
+                    settings: { 
+                        bgType: userSettings.bgType || 'color',
+                        bgWork: userSettings.bgWork || '#0f172a',
+                        bgBreak: userSettings.bgBreak || '#064e3b',
+                        bgLong: userSettings.bgLong || '#1e3a8a',
+                        alarmUrl: userSettings.alarmUrl || null 
+                    }
+                });
+            }
+
+            await setDoc(doc(db, `rooms/${code}/participants`, currentUser.uid), {
+                name: userData.displayName,
+                photo: userData.photoURL,
+                joinedAt: serverTimestamp()
+            });
+
+            startSync();
+        };
+
+        function startSync() {
+            document.getElementById('setup-view').style.display = 'none';
+            document.getElementById('timer-view').style.display = 'flex';
+            document.getElementById('display-code').innerText = currentRoomId;
+            document.getElementById('leader-tag').innerText = isLeader ? "👑" : "";
+            document.getElementById('leader-controls').style.display = isLeader ? 'flex' : 'none';
+            document.getElementById('member-notice').style.display = isLeader ? 'none' : 'block';
+
+            onSnapshot(doc(db, "rooms", currentRoomId), (snap) => {
+                if(!snap.exists()) { alert("部屋が解散されました"); location.href = 'index.html'; return; }
+                const data = snap.data();
+                handleSessionSync(data);
+                renderUI(data);
+            });
+
+            onSnapshot(collection(db, `rooms/${currentRoomId}/participants`), (snap) => {
+                const list = document.getElementById('participants-list');
+                list.innerHTML = "";
+                snap.forEach(doc => {
+                    const p = doc.data();
+                    const photo = p.photo || 'https://www.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png';
+                    list.innerHTML += `<div class="user-chip"><img src="${photo}" onerror="this.src='https://www.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png'">${p.name}</div>`;
+                });
+            });
+        }
+
+        async function handleSessionSync(data) {
+            const dbStartTime = data.startTime ? data.startTime.toDate().getTime() : null;
+            if (data.mode === 'work' && data.status === 'running') {
+                if (currentSessionStartTime !== dbStartTime) {
+                    currentSessionStartTime = dbStartTime;
+                    isProcessingFinish = false;
+                }
+            }
+            if (data.mode !== 'work' || data.status !== 'running') {
+                if (currentSessionStartTime && !isProcessingFinish) {
+                    isProcessingFinish = true;
+                    saveWorkRecord();
+                    currentSessionStartTime = null;
+                }
+            }
+        }
+
+        async function saveWorkRecord() {
+            // アラーム再生
+            if (alarmAudio.src) {
+                alarmAudio.currentTime = 0;
+                alarmAudio.play().catch(e => console.log("再生ブロック:", e));
+            }
+
+            await addDoc(collection(db, "pomodoros"), {
+                uid: currentUser.uid,
+                displayName: userData.displayName,
+                photoURL: userData.photoURL || "",
+                timestamp: serverTimestamp(),
+                mode: 'group'
+            });
+        }
+
+        function renderUI(data) {
+            const s = data.settings;
+            
+            // 【修正】リーダーの背景設定を全員に反映
+            if (s.bgType === 'image') {
+                const bgImg = data.mode === 'work' ? s.bgWork : (data.mode === 'break' ? s.bgBreak : s.bgLong);
+                document.body.style.backgroundImage = `url(${bgImg})`;
+                document.body.style.backgroundColor = "transparent";
+            } else {
+                const bgColor = data.mode === 'work' ? s.bgWork : (data.mode === 'break' ? s.bgBreak : s.bgLong);
+                document.body.style.backgroundImage = "none";
+                document.body.style.backgroundColor = bgColor;
+            }
+            
+            // 【修正】リーダーのアラーム設定を全員に反映
+            if(s.alarmUrl && alarmAudio.src !== s.alarmUrl) {
+                alarmAudio.src = s.alarmUrl;
+                alarmAudio.load();
+            }
+
+            document.getElementById('status-label').innerText = data.mode.toUpperCase();
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((d, i) => d.className = i < data.sessions ? "dot active" : "dot");
+
+            const seekBar = document.getElementById('seek-bar');
+            seekBar.max = data.duration;
+            seekBar.disabled = !isLeader;
+
+            if(localTimerId) clearInterval(localTimerId);
+            
+            if(data.status === 'running') {
+                document.getElementById('start-btn').innerText = "一時停止";
+                localTimerId = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - data.startTime.toDate().getTime()) / 1000);
+                    const remain = Math.max(0, data.timeLeft - elapsed);
+                    updateTimerDisplay(remain, data.duration);
+                    
+                    if(isLeader && remain <= 0) {
+                        clearInterval(localTimerId);
+                        handleLeaderFinish(data);
+                    }
+                }, 500);
+            } else {
+                document.getElementById('start-btn').innerText = "開始";
+                updateTimerDisplay(data.timeLeft, data.duration);
+                document.getElementById('long-break-modal').style.display = 'none';
+                if(alarmAudio) alarmAudio.pause(); // 停止時は音を止める
+            }
+        }
+
+        function updateTimerDisplay(remain, total) {
+            const m = Math.floor(remain / 60).toString().padStart(2, '0');
+            const s = (remain % 60).toString().padStart(2, '0');
+            document.getElementById('timer-display').innerText = `${m}:${s}`;
+            document.getElementById('seek-bar').value = total - remain;
+            document.title = `[${m}:${s}] みんなでポモ`;
+        }
+
+        async function handleLeaderFinish(data) {
+            const ref = doc(db, "rooms", currentRoomId);
+            if(data.mode === 'work') {
+                if(data.sessions >= 4) {
+                    await updateDoc(ref, { status: 'idle', timeLeft: 0 });
+                    document.getElementById('long-break-modal').style.display = 'flex';
+                } else {
+                    await updateDoc(ref, { mode: 'break', duration: 5*60, timeLeft: 5*60, status: 'running', startTime: serverTimestamp() });
+                }
+            } else {
+                const nextS = data.mode === 'break' ? data.sessions + 1 : 1;
+                await updateDoc(ref, { mode: 'work', duration: 25*60, timeLeft: 25*60, sessions: nextS, status: 'running', startTime: serverTimestamp() });
+            }
+        }
+
+        window.groupAction = async (type, val) => {
+            if(!isLeader) return;
+            const ref = doc(db, "rooms", currentRoomId);
+            const snap = await getDoc(ref);
+            const data = snap.data();
+            
+            if(type === 'toggle') {
+                if(data.status === 'running') {
+                    const elapsed = Math.floor((Date.now() - data.startTime.toDate().getTime()) / 1000);
+                    await updateDoc(ref, { status: 'idle', timeLeft: Math.max(0, data.timeLeft - elapsed), startTime: null });
+                } else await updateDoc(ref, { status: 'running', startTime: serverTimestamp() });
+            } else if(type === 'reset') {
+                await updateDoc(ref, { status: 'idle', timeLeft: 25*60, duration: 25*60, mode: 'work', sessions: 1, startTime: null });
+            } else if(type === 'setSet') {
+                await updateDoc(ref, { sessions: val, timeLeft: 25*60, duration: 25*60, mode: 'work', status: 'idle', startTime: null });
+            } else if(type === 'longBreak') {
+                await updateDoc(ref, { mode: 'long-break', duration: val*60, timeLeft: val*60, status: 'running', startTime: serverTimestamp(), sessions: 1 });
+            }
+        };
+
+        window.handleSeek = async (val) => {
+            if(!isLeader) return;
+            const ref = doc(db, "rooms", currentRoomId);
+            const snap = await getDoc(ref);
+            const data = snap.data();
+            const newRemain = data.duration - parseInt(val);
+            if(data.status === 'running') await updateDoc(ref, { timeLeft: newRemain, startTime: serverTimestamp() });
+            else await updateDoc(ref, { timeLeft: newRemain });
+        };
+
+        window.leaveRoom = async () => {
+            if(currentRoomId && currentUser) {
+                await deleteDoc(doc(db, `rooms/${currentRoomId}/participants`, currentUser.uid));
+                if(isLeader) {
+                    if(confirm("あなたが退出すると部屋は解散されます。よろしいですか？")) {
+                        await deleteDoc(doc(db, "rooms", currentRoomId));
+                    }
+                }
+            }
+            location.href = 'index.html';
+        };
+    </script>
+</body>
+</html>
