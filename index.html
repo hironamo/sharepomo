@@ -7,7 +7,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="Image_20260519_155216_839.jpeg">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2596/2596775.png">
     
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     <style>
@@ -16,95 +16,95 @@
             --accent: #38bdf8; --text: #f8fafc; --nav-bg: rgba(0,0,0,0.6);
         }
         body {
-            margin: 0; display: flex; flex-direction: column; height: 100vh; 
-            background-color: var(--bg-work); color: var(--text);
-            font-family: -apple-system, sans-serif; transition: background-color 0.8s; 
-            overflow-x: hidden;
-            background-size: cover; background-position: center; background-attachment: fixed; background-repeat: no-repeat;
+            margin: 0; display: flex; flex-direction: column; height: 100vh; \
+            background-color: var(--bg-work); color: var(--text);\
+            font-family: -apple-system, sans-serif; transition: background-color 0.8s; \
+            overflow-x: hidden;\
+            background-size: cover; background-position: center; background-attachment: fixed; background-repeat: no-repeat;\
         }
         /* --- Navigation --- */
         nav {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 20px; background: var(--nav-bg); backdrop-filter: blur(10px);
-            z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex; justify-content: space-between; align-items: center;\
+            padding: 10px 20px; background: var(--nav-bg); backdrop-filter: blur(10px);\
+            z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.1);\
         }
         .nav-links button {
-            background: none; border: none; color: white; cursor: pointer;
-            margin-left: 15px; font-size: 0.9rem; opacity: 0.7; transition: 0.2s;
+            background: none; border: none; color: white; cursor: pointer;\
+            margin-left: 15px; font-size: 0.9rem; opacity: 0.7; transition: 0.2s;\
         }
-        .nav-links button:hover, .nav-links button.active { opacity: 1; color: var(--accent); font-weight: bold;}
-        .user-info { display: flex; align-items: center; gap: 10px; }
-        .user-icon { width: 32px; height: 32px; border-radius: 50%; background: #ccc; object-fit: cover;}
+        .nav-links button:hover, .nav-links button.active { opacity: 1; color: var(--accent); font-weight: bold;}\
+        .user-info { display: flex; align-items: center; gap: 10px; }\
+        .user-icon { width: 32px; height: 32px; border-radius: 50%; background: #ccc; object-fit: cover;}\
 
         /* --- Views --- */
-        .view { display: none; flex: 1; overflow-y: auto; padding: 20px; }
-        .view.active { display: flex; }
+        .view { display: none; flex: 1; overflow-y: auto; padding: 20px; }\
+        .view.active { display: flex; }\
 
         /* --- Login View --- */
-        #view-login { flex-direction: column; align-items: center; justify-content: center; }
-        .auth-card { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 30px; border-radius: 12px; text-align: center; width: 100%; max-width: 350px; border: 1px solid rgba(255,255,255,0.1);}
-        .auth-input { width: 100%; padding: 12px; margin: 8px 0; box-sizing: border-box; border-radius: 6px; border: none;}
-        .auth-btn { width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;}
-        .btn-google { background: white; color: #333; }
-        .btn-email { background: var(--accent); color: black; }
+        #view-login { flex-direction: column; align-items: center; justify-content: center; }\
+        .auth-card { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 30px; border-radius: 12px; text-align: center; width: 100%; max-width: 350px; border: 1px solid rgba(255,255,255,0.1);}\
+        .auth-input { width: 100%; padding: 12px; margin: 8px 0; box-sizing: border-box; border-radius: 6px; border: none;}\
+        .auth-btn { width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;}\
+        .btn-google { background: white; color: #333; }\
+        .btn-email { background: var(--accent); color: black; }\
 
         /* --- Main View (Timer & Ranking) --- */
-        #view-main { flex-direction: row; padding: 0; position: relative;}
-        #timer-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;}
-        
-        #ranking-section { width: 320px; background: rgba(0,0,0,0.3); border-left: 1px solid rgba(255,255,255,0.1); padding: 20px; display: flex; flex-direction: column; transition: 0.3s;}
-        #ranking-section.collapsed { display: none !important; }
-        
+        #view-main { flex-direction: row; padding: 0; position: relative;}\
+        #timer-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;}\
+        \
+        #ranking-section { width: 320px; background: rgba(0,0,0,0.3); border-left: 1px solid rgba(255,255,255,0.1); padding: 20px; display: flex; flex-direction: column; transition: 0.3s;}\
+        #ranking-section.collapsed { display: none !important; }\
+        \
         .ranking-toggle-btn {
-            position: absolute; top: 15px; right: 15px;
-            background: rgba(0,0,0,0.5); color: white; border: 1px solid rgba(255,255,255,0.2);
-            padding: 8px 15px; border-radius: 8px; cursor: pointer; backdrop-filter: blur(5px);
-            font-size: 0.9rem; z-index: 10; transition: 0.2s;
-        }
-        .ranking-toggle-btn:hover { background: var(--accent); color: black; font-weight: bold; }
-        
-        @media (max-width: 768px) { 
-            #view-main { flex-direction: column; } 
-            #ranking-section { width: auto; border-left: none; border-top: 1px solid rgba(255,255,255,0.1); } 
-            .ranking-toggle-btn { top: 10px; right: 10px; }
-        }
+            position: absolute; top: 15px; right: 15px;\
+            background: rgba(0,0,0,0.5); color: white; border: 1px solid rgba(255,255,255,0.2);\
+            padding: 8px 15px; border-radius: 8px; cursor: pointer; backdrop-filter: blur(5px);\
+            font-size: 0.9rem; z-index: 10; transition: 0.2s;\
+        }\
+        .ranking-toggle-btn:hover { background: var(--accent); color: black; font-weight: bold; }\
+        \
+        @media (max-width: 768px) { \
+            #view-main { flex-direction: column; } \
+            #ranking-section { width: auto; border-left: none; border-top: 1px solid rgba(255,255,255,0.1); } \
+            .ranking-toggle-btn { top: 10px; right: 10px; }\
+        }\
 
         /* --- Timer UI --- */
-        #status-label { letter-spacing: 0.3rem; opacity: 0.8; margin-bottom: 20px; text-transform: uppercase; font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-weight: bold;}
-        .session-dots { display: flex; gap: 15px; margin-bottom: 1rem; }
-        .dot-wrapper { position: relative; padding: 5px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-        .dot-wrapper::after { content: ""; position: absolute; top: -25px; bottom: -35px; left: -20px; right: -20px; z-index: 10; }
-        .dot { width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: 0.3s; pointer-events: none; }
-        .dot.active { background: var(--accent); box-shadow: 0 0 12px var(--accent); }
-        #timer { font-size: clamp(4rem, 18vw, 12rem); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; margin: 0; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        
-        .progress-container { width: 80%; max-width: 500px; margin: 2.5rem 0; }
-        input[type="range"] { width: 100%; -webkit-appearance: none; background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; outline: none; cursor: pointer; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: white; border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        
-        .controls { display: flex; gap: 1.5rem; }
-        .main-btn { padding: 1rem 2.5rem; font-size: 1.2rem; border-radius: 50px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: 0.2s; font-weight: bold; }
-        #start-btn { background: var(--text); color: #000; min-width: 160px; }
+        #status-label { letter-spacing: 0.3rem; opacity: 0.8; margin-bottom: 20px; text-transform: uppercase; font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-weight: bold;}\
+        .session-dots { display: flex; gap: 15px; margin-bottom: 1rem; }\
+        .dot-wrapper { position: relative; padding: 5px; cursor: pointer; -webkit-tap-highlight-color: transparent; }\
+        .dot-wrapper::after { content: ""; position: absolute; top: -25px; bottom: -35px; left: -20px; right: -20px; z-index: 10; }\
+        .dot { width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: 0.3s; pointer-events: none; }\
+        .dot.active { background: var(--accent); box-shadow: 0 0 12px var(--accent); }\
+        #timer { font-size: clamp(4rem, 18vw, 12rem); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; margin: 0; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }\
+        \
+        .progress-container { width: 80%; max-width: 500px; margin: 2.5rem 0; }\
+        input[type="range"] { width: 100%; -webkit-appearance: none; background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; outline: none; cursor: pointer; }\
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: white; border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.5); }\
+        \
+        .controls { display: flex; gap: 1.5rem; }\
+        .main-btn { padding: 1rem 2.5rem; font-size: 1.2rem; border-radius: 50px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: 0.2s; font-weight: bold; }\
+        #start-btn { background: var(--text); color: #000; min-width: 160px; }\
 
         /* --- Modals --- */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
-        .modal-content { text-align: center; background: var(--bg-work); padding: 40px; border-radius: 20px; border: 1px solid var(--accent);}
-        .modal-btn { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 15px 30px; margin: 10px; border-radius: 10px; cursor: pointer; font-size: 1.2rem; font-weight: bold; transition:0.2s;}
-        .modal-btn:hover { background: var(--accent); color: black; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); flex-direction: column; align-items: center; justify-content: center; z-index: 200; padding: 20px; }\
+        .modal-content { text-align: center; background: #1e293b; padding: 30px; border-radius: 20px; border: 1px solid var(--accent); box-shadow: 0 10px 25px rgba(0,0,0,0.5);}\
+        .modal-btn { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 12px 25px; margin: 10px; border-radius: 10px; cursor: pointer; font-size: 1.1rem; font-weight: bold; transition:0.2s;}\
+        .modal-btn:hover { background: var(--accent); color: black; }\
 
         /* --- Settings & History --- */
-        .settings-card { max-width: 500px; margin: 0 auto; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 15px; width: 100%; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);}
-        .settings-group { margin-bottom: 20px; }
-        .settings-group label { display: block; margin-bottom: 8px; opacity: 0.8; font-size: 0.9rem;}
-        #calendar { max-width: 800px; margin: 0 auto; width: 100%; background: white; color: black; padding: 15px; border-radius: 10px;}
+        .settings-card { max-width: 500px; margin: 0 auto; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 15px; width: 100%; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);}\
+        .settings-group { margin-bottom: 20px; }\
+        .settings-group label { display: block; margin-bottom: 8px; opacity: 0.8; font-size: 0.9rem;}\
+        #calendar { max-width: 800px; margin: 0 auto; width: 100%; background: white; color: black; padding: 15px; border-radius: 10px;}\
 
         /* --- Ranking Tabs --- */
-        .tab-container { display: flex; gap: 4px; background: rgba(255,255,255,0.1); padding: 5px; border-radius: 8px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; border: none; background: none; color: white; padding: 8px 0; font-size: 0.9rem; cursor: pointer; border-radius: 6px; opacity: 0.5; transition: 0.2s;}
-        .tab-btn.active { background: var(--accent); color: #000; opacity: 1; font-weight: bold; }
-        .ranking-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .ranking-name { display: flex; align-items: center; gap: 10px;}
-        .ranking-icon { width: 28px; height: 28px; border-radius: 50%; object-fit: cover;}
+        .tab-container { display: flex; gap: 4px; background: rgba(255,255,255,0.1); padding: 5px; border-radius: 8px; margin-bottom: 15px; }\
+        .tab-btn { flex: 1; border: none; background: none; color: white; padding: 8px 0; font-size: 0.9rem; cursor: pointer; border-radius: 6px; opacity: 0.5; transition: 0.2s;}\
+        .tab-btn.active { background: var(--accent); color: #000; opacity: 1; font-weight: bold; }\
+        .ranking-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }\
+        .ranking-name { display: flex; align-items: center; gap: 10px;}\
+        .ranking-icon { width: 28px; height: 28px; border-radius: 50%; object-fit: cover;}\
     </style>
 </head>
 <body>
@@ -264,6 +264,20 @@
         </div>
     </div>
 
+    <div id="pwa-guide-modal" class="modal">
+        <div class="modal-content" style="max-width: 450px; text-align: left; line-height: 1.6;">
+            <h3 style="margin-top: 0; text-align: center; color: var(--accent); font-size: 1.3rem; letter-spacing: 1px;">📱 iPhone / iPad (iOS) の場合【最重要】</h3>
+            <p style="font-size: 0.95rem; margin-bottom: 15px; opacity: 0.95;">
+                Safari でアプリのURLを開きます。<br><br>
+                画面下部（iPadは右上）の <strong>「共有ボタン」</strong>（四角から上矢印が出ているアイコン）をタップします。<br><br>
+                メニューをスクロールし、<strong>「ホーム画面に追加」</strong> を選択して追加します。<br><br>
+                ホーム画面に作成されたアプリのアイコンから、<strong>再度アプリを起動</strong> します（ブラウザのタブではなく、1つの独立したアプリとして起動します）。<br><br>
+                ログイン後、アプリ内の「Settings（設定）」タブを開き、追加された <strong>「通知の許可を有効にする」</strong> ボタンをタップして、システムポップアップで「許可」を選択します。
+            </p>
+            <button class="modal-btn" onclick="closePwaGuide()" style="width: 100%; margin: 15px 0 0 0; padding: 12px; background: var(--accent); color: black;">確認しました</button>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -315,12 +329,28 @@
                 document.addEventListener('touchstart', unlockAudio, { once: true });
                 document.addEventListener('click', unlockAudio, { once: true });
                 switchView('main');
+                
+                // ★追加：メイン画面表示後に案内表示をチェック
+                checkPwaGuide();
             } else {
                 window.currentUser = null;
                 document.getElementById('main-nav').style.display = 'none';
                 switchView('login');
             }
         });
+
+        // ★新規追加：PWA案内ポップアップの判定処理
+        function checkPwaGuide() {
+            if (!localStorage.getItem('pomo_pwa_guided')) {
+                document.getElementById('pwa-guide-modal').style.display = 'flex';
+            }
+        }
+
+        // ★新規追加：確認ボタン押下時の非表示＆既読フラグ保存処理
+        window.closePwaGuide = () => {
+            localStorage.setItem('pomo_pwa_guided', 'true');
+            document.getElementById('pwa-guide-modal').style.display = 'none';
+        };
 
         function unlockAudio() {
             if(!currentAudio) currentAudio = new Audio();
@@ -463,7 +493,6 @@
         };
 
         window.toggleTimer = async () => {
-            // ★iOS/Android対策：ユーザー操作のタイミングで通知権限をリクエスト（初回のみ）
             if (window.Notification && Notification.permission === 'default') {
                 await Notification.requestPermission();
             }
@@ -510,7 +539,6 @@
 
             try { if(currentAudio && window.userData.alarmUrl) { currentAudio.currentTime = 0; currentAudio.play(); } else fallbackBeep(); } catch(e) { console.warn("Audio blocked"); }
 
-            // ★修正ポイント：バックグラウンドでも通知が届くよう、Service Workerの通知エンジンを利用
             if (window.Notification && Notification.permission === 'granted') {
                 const title = previousMode === 'work' ? "作業完了！☕️" : "休憩終了！💻";
                 const body = "アプリを開いて次のセッションを開始しましょう";
@@ -609,7 +637,6 @@
             calendarInstance = new FullCalendar.Calendar(calendarEl, { initialView: 'dayGridMonth', locale: 'ja', events: events, height: 'auto' }); calendarInstance.render();
         }
 
-        // ★新規追加：通知権限を手動で要求/テストする関数
         window.requestNotificationPermission = async () => {
             if (!('Notification' in window)) return alert('このブラウザは通知に対応していません。');
             const permission = await Notification.requestPermission();
@@ -623,7 +650,6 @@
             } else { alert('通知が拒否されたか、有効になっていません。ブラウザ設定を確認してください。'); }
         };
 
-        // ★新規追加：Service Workerの登録処理
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
