@@ -1,0 +1,15 @@
+{
+  "name": "Focus Connect Pro",
+  "short_name": "FocusPomo",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#38bdf8",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2596/2596775.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
